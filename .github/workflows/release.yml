@@ -20,7 +20,9 @@ env:
 
 jobs:
   darwin:
-    runs-on: macos-14
+    # macOS 14+ runners are Apple silicon, so one runner can build arm64, amd64
+    # and lipo them into a universal bundle.
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -98,13 +100,19 @@ jobs:
           if-no-files-found: error
 
   linux:
-    runs-on: ubuntu-22.04
+    # The default Wails v3 Linux backend is GTK 4 + WebKitGTK 6.0, which needs
+    # GTK >= 4.14 at build time: Ubuntu 22.04 is too old, 24.04 is the baseline.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true
+      - name: Install GTK/WebKit headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-4-dev libwebkitgtk-6.0-dev
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -117,9 +125,6 @@ jobs:
       - name: Resolve version
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
       - run: node build/stamp-version.mjs "$VERSION"
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
       - run: npm ci
         working-directory: frontend
       - run: task linux:build
@@ -136,7 +141,7 @@ jobs:
 
   publish:
     needs: [darwin, windows, linux]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -155,7 +160,7 @@ jobs:
           | --- | --- | --- |
           | macOS 12+ | \`apic_${VERSION}_darwin_universal.dmg\` / \`.zip\` | Universal (Apple silicon + Intel). Ad-hoc signed, not notarised: first launch needs right-click → Open, or \`xattr -dr com.apple.quarantine /Applications/apic.app\`. |
           | Windows 10+ | \`apic_${VERSION}_windows_amd64.zip\` | Needs the WebView2 runtime (preinstalled on Windows 11, bundled with Edge on 10). |
-          | Linux x86-64 | \`apic_${VERSION}_linux_amd64.tar.gz\` | Needs GTK 3 and WebKitGTK 4.1: \`apt install libgtk-3-0 libwebkit2gtk-4.1-0\`. |
+          | Linux x86-64 | \`apic_${VERSION}_linux_amd64.tar.gz\` | GTK 4 + WebKitGTK 6.0, i.e. Ubuntu 24.04 or newer: \`apt install libgtk-4-1 libwebkitgtk-6.0-4\`. |
 
           ## First run
 
