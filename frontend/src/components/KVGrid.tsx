@@ -37,16 +37,16 @@ export function KVGrid({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="grid h-[26px] shrink-0 grid-cols-[28px_32%_1fr_24px] items-center border-b border-line text-[10.5px] uppercase tracking-wide text-ink3">
+      <div className="grid h-[24px] shrink-0 grid-cols-[30px_32%_1fr_26px] items-center border-b border-line">
         <span />
-        <span className="px-1.5">Key</span>
-        <span className="border-l border-line px-1.5">Value</span>
+        <span className="eyebrow px-2">Key</span>
+        <span className="eyebrow border-l border-line px-2">Value</span>
         <span />
       </div>
       <div className="scroll min-h-0 flex-1 overflow-y-auto">
         {display.map((row, index) =>
           row === null ? (
-            <div key="__blank" className="grid h-[28px] grid-cols-[28px_32%_1fr_24px] border-b border-line">
+            <div key="__blank" className="grid h-[30px] grid-cols-[30px_32%_1fr_26px] border-b border-line">
               <span />
               <div className="flex items-center">
                 <VarInput value="" onChange={(key) => update(index, { key, enabled: true })} placeholder={placeholder} />
@@ -58,7 +58,7 @@ export function KVGrid({
             <div
               key={index}
               className={cx(
-                "group grid h-[28px] grid-cols-[28px_32%_1fr_24px] border-b border-line",
+                "group grid h-[30px] grid-cols-[30px_32%_1fr_26px] border-b border-line",
                 !isOn(row) && "opacity-45",
               )}
             >
@@ -67,7 +67,7 @@ export function KVGrid({
                   type="checkbox"
                   checked={isOn(row)}
                   onChange={(e) => update(index, { enabled: e.target.checked })}
-                  className="h-[11px] w-[11px] appearance-none rounded-[2px] border border-line-strong checked:border-var checked:bg-var-bg"
+                  className="h-[12px] w-[12px] appearance-none rounded-[2px] border border-line-strong checked:border-var checked:bg-var-bg"
                 />
               </label>
               <div className="flex items-center">
@@ -99,7 +99,7 @@ export function KVGrid({
           ),
         )}
         {filled.length === 0 && (
-          <div className="px-3 py-2 text-[11px] text-ink3">
+          <div className="px-3.5 py-2 text-[11.5px] text-ink3">
             Empty. Paste a block of <span className="mono">Key: Value</span> lines into any value cell to fill rows.
           </div>
         )}

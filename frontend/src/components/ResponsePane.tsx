@@ -34,13 +34,13 @@ export function ResponsePane() {
   }, [run, snapshot]);
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col bg-surface">
-      <div className="flex h-[34px] shrink-0 items-center gap-2 border-b border-line px-3">
+    <section className="flex min-h-0 flex-1 flex-col bg-panel">
+      <div className="flex h-[36px] shrink-0 items-center gap-2 border-b border-line px-3.5">
         {view ? (
           <>
             <span
               className={cx(
-                "mono text-[11.5px]",
+                "mono text-[12px] font-medium",
                 view.status < 300 ? "text-get" : view.status < 400 ? "text-post" : "text-del",
               )}
             >
@@ -49,13 +49,13 @@ export function ResponsePane() {
             <span className="text-ink3">·</span>
             <TimingsHover timings={view.timings} label={humanMS(view.duration_ms)} />
             <span className="text-ink3">·</span>
-            <span className="mono text-[11px] text-ink2">{humanBytes(view.size)}</span>
+            <span className="mono text-[11.5px] text-ink2">{humanBytes(view.size)}</span>
             {snapshot && <Dot tone="secret" />}
             {view.truncated && <span className="mono text-[10px] text-put">capped at 8MB</span>}
             {view.error && <span className="mono truncate text-[10.5px] text-del">{view.error}</span>}
           </>
         ) : (
-          <span className="mono text-[11px] text-ink3">{running ? "Sending…" : "No response yet"}</span>
+          <span className="mono text-[11.5px] text-ink3">{running ? "Sending…" : "No response yet"}</span>
         )}
         <div className="ml-auto flex h-full items-center">
           <TabButton active={responseView === "pretty"} onClick={() => set({ responseView: "pretty" })}>
@@ -90,11 +90,11 @@ function PrettyView({ view }: { view: RunView }) {
   const { text } = prettyBody(view.body);
   const isJSON = ctype.includes("json") || text !== view.body;
   if (!view.body) {
-    return <div className="px-3 py-2 text-[11px] text-ink3">Empty body.</div>;
+    return <div className="px-3.5 py-2 text-[11.5px] text-ink3">Empty body.</div>;
   }
   if (isJSON) return <JsonEditor value={text} readOnly />;
   return (
-    <pre className="scroll h-full overflow-auto whitespace-pre-wrap break-words px-3 py-2 mono text-[12px] leading-[1.55] text-ink">
+    <pre className="scroll h-full overflow-auto whitespace-pre-wrap break-words px-3.5 py-2.5 mono text-[12.5px] leading-[1.6] text-ink">
       {view.body}
     </pre>
   );
@@ -118,7 +118,7 @@ function RawView({ view }: { view: RunView }) {
     return lines.join("\n");
   }, [view]);
   return (
-    <pre className="scroll h-full overflow-auto whitespace-pre-wrap break-words px-3 py-2 mono text-[11.5px] leading-[1.55] text-ink2">
+    <pre className="scroll h-full overflow-auto whitespace-pre-wrap break-words px-3.5 py-2.5 mono text-[12px] leading-[1.6] text-ink2">
       {raw}
     </pre>
   );
@@ -131,8 +131,8 @@ function HeadersView({ headers }: { headers?: Record<string, string[]> }) {
     <div className="scroll h-full overflow-auto">
       {rows.map(([key, values]) => (
         <div key={key} className="grid grid-cols-[32%_1fr] border-b border-line text-[11.5px]">
-          <span className="px-3 py-1 mono text-ink2">{key}</span>
-          <span className="border-l border-line px-3 py-1 mono break-all text-ink">{values.join(", ")}</span>
+          <span className="px-3.5 py-1.5 mono text-ink2">{key}</span>
+          <span className="border-l border-line px-3.5 py-1.5 mono break-all text-ink">{values.join(", ")}</span>
         </div>
       ))}
     </div>
@@ -151,7 +151,7 @@ function TimingsHover({ timings, label }: { timings: Timings; label: string }) {
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <button type="button" className="mono text-[11px] text-ink2 hover:text-ink">
+        <button type="button" className="mono text-[11.5px] text-ink2 hover:text-ink">
           {label}
         </button>
       </Popover.Trigger>
@@ -175,7 +175,7 @@ function TimingsHover({ timings, label }: { timings: Timings; label: string }) {
 function EmptyState() {
   return (
     <div className="flex h-full items-start justify-center pt-[14%]">
-      <div className="mono text-[11.5px] leading-[2] text-ink3">
+      <div className="mono text-[12px] leading-[2.1] text-ink2">
         <div>⌘↵ Send Request</div>
         <div>⌘V Paste cURL</div>
         <div>⌘K Command Palette</div>

@@ -33,7 +33,7 @@ export function VarInput({
       <div
         aria-hidden
         className={cx(
-          "pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-pre px-1.5 text-[12.5px] leading-[26px] text-ink",
+          "pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-pre px-2 text-[12.5px] leading-[28px] text-ink",
           mono && "mono",
         )}
       >
@@ -59,7 +59,7 @@ export function VarInput({
           if (onPasteBlob(raw)) e.preventDefault();
         }}
         className={cx(
-          "relative h-[26px] w-full min-w-0 bg-transparent px-1.5 text-[12.5px] leading-[26px] outline-none placeholder:text-ink3",
+          "relative h-[28px] w-full min-w-0 bg-transparent px-2 text-[12.5px] leading-[28px] outline-none placeholder:text-ink3",
           mono && "mono",
           focused ? "text-ink caret-ink" : "text-transparent caret-transparent",
         )}

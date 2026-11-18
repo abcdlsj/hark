@@ -8,8 +8,8 @@ import { useEffect, useRef } from "react";
 
 const quiet = EditorView.theme({
   "&": { height: "100%", backgroundColor: "transparent", color: "var(--apic-ink)", fontSize: "12.5px" },
-  ".cm-content": { padding: "6px 0", fontFamily: "var(--font-mono)", lineHeight: "1.5", caretColor: "var(--apic-ink)" },
-  ".cm-line": { padding: "0 8px 0 4px" },
+  ".cm-content": { padding: "8px 0", fontFamily: "var(--font-mono)", lineHeight: "1.6", caretColor: "var(--apic-ink)" },
+  ".cm-line": { padding: "0 10px 0 6px" },
   "&.cm-focused": { outline: "none" },
   ".cm-scroller": { overflow: "auto" },
 });

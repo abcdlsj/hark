@@ -183,14 +183,14 @@ export function OmniUrl() {
   const hoverVar = hover ? vars.find((v) => v.key === hover.key) : undefined;
 
   return (
-    <div className="relative flex h-[48px] shrink-0 items-center gap-2 border-b border-line px-3">
+    <div className="relative flex h-[50px] shrink-0 items-center gap-2.5 border-b border-line bg-surface px-3.5">
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <button
             type="button"
-            className="motion flex h-[32px] w-[86px] items-center justify-between rounded-[5px] border border-line px-2 hover:border-line-strong"
+            className="motion flex h-[32px] w-[92px] items-center justify-between rounded-[5px] border border-line-strong bg-canvas px-2.5 hover:bg-elevated"
           >
-            <span className={cx("mono text-[11px] font-medium tracking-wide", methodClass(editor?.method ?? "GET"))}>
+            <span className={cx("mono text-[11.5px] font-medium tracking-[0.04em]", methodClass(editor?.method ?? "GET"))}>
               {editor?.method ?? "GET"}
             </span>
             <span className="text-[8px] text-ink3">▾</span>
@@ -211,10 +211,10 @@ export function OmniUrl() {
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
 
-      <div className="relative flex h-[32px] min-w-0 flex-1 items-center rounded-[5px] border border-line bg-surface px-1">
+      <div className="relative flex h-[34px] min-w-0 flex-1 items-center rounded-[5px] border border-line bg-canvas px-1.5 focus-within:border-line-strong">
         <div ref={host} className="min-w-0 flex-1" />
         {!url && (
-          <span className="pointer-events-none absolute left-2 mono text-[12.5px] text-ink3">
+          <span className="pointer-events-none absolute left-2.5 mono text-[13px] text-ink3">
             {"{{base_url}}/v1/orders/refund"}
           </span>
         )}
@@ -224,7 +224,7 @@ export function OmniUrl() {
         <button
           type="button"
           onClick={() => void cancel()}
-          className="motion flex h-[32px] items-center gap-1.5 rounded-[5px] border border-line-strong px-3 text-[11.5px] text-ink"
+          className="motion flex h-[32px] items-center gap-2 rounded-[5px] border border-line-strong bg-elevated px-3.5 text-[12px] text-ink"
         >
           Cancel <span className="mono text-[10px] text-ink3">Esc</span>
         </button>
@@ -232,9 +232,9 @@ export function OmniUrl() {
         <button
           type="button"
           onClick={() => void send()}
-          className="motion flex h-[32px] items-center gap-1.5 rounded-[5px] border border-line px-3 text-[11.5px] text-ink2 hover:border-line-strong hover:text-ink"
+          className="motion flex h-[32px] items-center gap-2 rounded-[5px] border border-line-strong bg-elevated px-3.5 text-[12px] font-medium text-ink hover:border-ink3"
         >
-          Send <span className="mono text-[10px] text-ink3">⌘↵</span>
+          Send <span className="mono text-[10px] font-normal text-ink3">⌘↵</span>
         </button>
       )}
 

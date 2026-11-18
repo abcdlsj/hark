@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useStore } from "./store";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
-import { OmniUrl } from "./components/OmniUrl";
 import { Composer } from "./components/Composer";
 import { ResponsePane } from "./components/ResponsePane";
 import { CommandPalette } from "./components/CommandPalette";
@@ -156,7 +155,6 @@ export function App() {
               <EmptyWorkspace error={error} onNew={newDraft} />
             ) : (
               <>
-                <OmniUrl />
                 <div ref={shell} className="flex min-h-0 flex-1 flex-col">
                   {sideBySide ? (
                     <div className="flex min-h-0 flex-1">
@@ -206,8 +204,8 @@ function EmptyWorkspace({ error, onNew }: { error: string | null; onNew: () => v
         <p className="mono text-[11.5px] leading-relaxed text-del">{error}</p>
       ) : (
         <>
-          <p className="text-[12.5px] text-ink2">No request open.</p>
-          <div className="mono text-[11.5px] leading-[2] text-ink3">
+          <p className="text-[13px] text-ink">No request open.</p>
+          <div className="mono text-[12px] leading-[2.1] text-ink2">
             <div>⌘N New request</div>
             <div>⌘V Paste cURL</div>
             <div>⌘K Command palette</div>
@@ -215,7 +213,7 @@ function EmptyWorkspace({ error, onNew }: { error: string | null; onNew: () => v
           <button
             type="button"
             onClick={onNew}
-            className="motion mt-1 rounded-[5px] border border-line px-2.5 py-1 text-[11.5px] text-ink2 hover:border-line-strong hover:text-ink"
+            className="motion mt-1 rounded-[5px] border border-line-strong bg-elevated px-3 py-1.5 text-[12px] text-ink hover:border-ink3"
           >
             New request
           </button>

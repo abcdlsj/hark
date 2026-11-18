@@ -46,10 +46,10 @@ export function Ghost({
       disabled={disabled}
       onClick={onClick}
       className={cx(
-        "motion inline-flex h-6 items-center gap-1 rounded-[5px] border px-2 text-[11.5px]",
+        "motion inline-flex h-[26px] items-center gap-1 rounded-[5px] border px-2.5 text-[12px]",
         active
           ? "border-line-strong bg-elevated text-ink"
-          : "border-line text-ink2 hover:border-line-strong hover:text-ink",
+          : "border-line text-ink2 hover:border-line-strong hover:bg-elevated/60 hover:text-ink",
         disabled && "opacity-40",
         className,
       )}
@@ -76,13 +76,13 @@ export function TabButton({
       type="button"
       onClick={onClick}
       className={cx(
-        "motion relative flex h-full shrink-0 items-center gap-1 whitespace-nowrap px-2 text-[12px]",
+        "motion relative flex h-full shrink-0 items-center gap-1 whitespace-nowrap px-2.5 text-[12.5px]",
         active ? "text-ink" : "text-ink2 hover:text-ink",
       )}
     >
       {children}
-      {hint !== undefined && hint !== null && <span className="mono text-[10.5px] text-ink3">{hint}</span>}
-      {active && <span className="absolute inset-x-1.5 bottom-0 h-[1.5px] bg-ink" />}
+      {hint !== undefined && hint !== null && <span className="mono text-[10px] text-ink3">{hint}</span>}
+      {active && <span className="absolute inset-x-2 bottom-0 h-[2px] bg-ink" />}
     </button>
   );
 }
@@ -99,7 +99,8 @@ export function Dot({ tone = "var" }: { tone?: "var" | "secret" | "undefined" | 
   return <span className={cx("inline-block h-[5px] w-[5px] rounded-full", color)} />;
 }
 
-export function MethodText({ method, className }: { method: string; className?: string }) {
+export function MethodText({ method, className, short }: { method: string; className?: string; short?: boolean }) {
+  const m = method.toUpperCase();
   const palette: Record<string, string> = {
     GET: "text-get",
     POST: "text-post",
@@ -107,10 +108,9 @@ export function MethodText({ method, className }: { method: string; className?: 
     PATCH: "text-patch",
     DELETE: "text-del",
   };
+  const label = short ? (m === "DELETE" ? "DEL" : m === "OPTIONS" ? "OPT" : m === "PATCH" ? "PAT" : m) : m;
   return (
-    <span className={cx("mono text-[11px] tracking-tight", palette[method.toUpperCase()] ?? "text-ink2", className)}>
-      {method.toUpperCase()}
-    </span>
+    <span className={cx("mono text-[11px] tracking-tight", palette[m] ?? "text-ink2", className)}>{label}</span>
   );
 }
 

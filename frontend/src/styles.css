@@ -3,15 +3,16 @@
 /* Design tokens from the product spec: 95% cool grey, 1px lines, no shadows
    inside the layout. Only floating layers may carry depth. */
 :root {
-  --apic-canvas: #0b0c0e;
-  --apic-surface: #101216;
-  --apic-elevated: #181b21;
-  --apic-overlay: #161920e6;
-  --apic-line: rgba(255, 255, 255, 0.07);
+  --apic-canvas: #08090b;
+  --apic-surface: #0f1116;
+  --apic-panel: #0b0d11;
+  --apic-elevated: #1a1e26;
+  --apic-overlay: #171a21f2;
+  --apic-line: rgba(255, 255, 255, 0.09);
   --apic-line-strong: rgba(255, 255, 255, 0.18);
-  --apic-ink: #eceef2;
-  --apic-ink-2: #8a909e;
-  --apic-ink-3: #4e5461;
+  --apic-ink: #f1f3f7;
+  --apic-ink-2: #a3abba;
+  --apic-ink-3: #6e7686;
   --apic-get: #34d399;
   --apic-post: #60a5fa;
   --apic-put: #fbbf24;
@@ -31,15 +32,16 @@
 }
 
 [data-theme="light"] {
-  --apic-canvas: #f6f7f9;
+  --apic-canvas: #f4f5f8;
   --apic-surface: #ffffff;
-  --apic-elevated: #eef0f4;
-  --apic-overlay: #ffffffeb;
-  --apic-line: rgba(0, 0, 0, 0.07);
-  --apic-line-strong: rgba(0, 0, 0, 0.22);
-  --apic-ink: #111318;
-  --apic-ink-2: #5e6573;
-  --apic-ink-3: #9ca3af;
+  --apic-elevated: #eaedf2;
+  --apic-overlay: #fffffff2;
+  --apic-line: rgba(15, 23, 42, 0.1);
+  --apic-line-strong: rgba(15, 23, 42, 0.24);
+  --apic-ink: #0e1116;
+  --apic-ink-2: #4d5563;
+  --apic-ink-3: #6b7280;
+  --apic-panel: #f1f2f5;
   /* Accents darken just enough to stay legible on white; the palette and its
      discipline stay the same. */
   --apic-get: #059669;
@@ -62,6 +64,7 @@
 @theme {
   --color-canvas: var(--apic-canvas);
   --color-surface: var(--apic-surface);
+  --color-panel: var(--apic-panel);
   --color-elevated: var(--apic-elevated);
   --color-overlay: var(--apic-overlay);
   --color-line: var(--apic-line);
@@ -98,7 +101,7 @@ body {
   background: var(--apic-canvas);
   color: var(--apic-ink);
   font-family: var(--font-sans);
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   font-variant-numeric: tabular-nums;
@@ -245,4 +248,21 @@ textarea {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--apic-var), transparent);
   animation: apic-progress 1.1s linear infinite;
+}
+
+/* Small caps section label, used by the sidebar and the inspector strips. */
+.eyebrow {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--apic-ink-3);
+}
+
+/* Row-level emphasis: the selected tree item reads as primary text with a
+   hairline marker instead of a coloured block. */
+.row-selected {
+  background: var(--apic-elevated);
+  color: var(--apic-ink);
+  box-shadow: inset 2px 0 0 var(--apic-ink-2);
 }

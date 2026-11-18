@@ -24,44 +24,47 @@ function groupByModule(items: ListItem[]): Group[] {
 }
 
 export function Sidebar() {
-  const { apis, history, selectedId, select, agentIds, openSnapshot, newDraft } = useStore();
+  const { apis, history, selectedId, select, agentIds, openSnapshot, newDraft, snapshot } = useStore();
   const groups = useMemo(() => groupByModule(apis), [apis]);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [pulseOpen, setPulseOpen] = useState(true);
 
   return (
-    <aside className="flex w-[244px] shrink-0 flex-col border-r border-line bg-canvas">
-      <div className="flex h-[34px] shrink-0 items-center justify-between pl-3 pr-2">
-        <span className="text-[10.5px] uppercase tracking-wide text-ink3">Collections</span>
+    <aside className="flex w-[248px] shrink-0 flex-col border-r border-line bg-panel">
+      <div className="flex h-[34px] shrink-0 items-center justify-between pl-3.5 pr-2">
+        <span className="eyebrow">Collections</span>
         <button
           type="button"
           onClick={newDraft}
           title="New request (⌘N)"
-          className="motion flex h-5 w-5 items-center justify-center rounded-[4px] text-[13px] leading-none text-ink2 hover:bg-elevated hover:text-ink"
+          className="motion flex h-5 w-5 items-center justify-center rounded-[4px] text-[14px] leading-none text-ink2 hover:bg-elevated hover:text-ink"
         >
           +
         </button>
       </div>
 
-      <div className="scroll min-h-0 flex-1 overflow-y-auto pb-2">
+      <div className="scroll min-h-0 flex-1 overflow-y-auto pb-3">
         {groups.length === 0 && (
-          <div className="px-3 py-2 text-[11.5px] leading-relaxed text-ink3">
+          <div className="px-3.5 py-2 text-[12px] leading-relaxed text-ink2">
             No requests yet. Paste a cURL anywhere, or run{" "}
-            <span className="mono text-ink2">apic save orders/refund --stdin</span>.
+            <span className="mono text-ink">apic save orders/refund --stdin</span>.
           </div>
         )}
         {groups.map((group) => {
           const isCollapsed = group.name !== "" && collapsed[group.name];
           return (
-            <div key={group.name || "_root"} className="mb-0.5">
+            <div key={group.name || "_root"} className="mb-1">
               {group.name !== "" && (
                 <button
                   type="button"
                   onClick={() => setCollapsed((prev) => ({ ...prev, [group.name]: !prev[group.name] }))}
-                  className="motion flex h-[26px] w-full items-center gap-1 pl-2 pr-2 text-left text-[11.5px] text-ink2 hover:text-ink"
+                  className="motion group flex h-[26px] w-full items-center gap-1.5 pl-2.5 pr-3 text-left"
                 >
-                  <span className="w-2 text-[9px] text-ink3">{isCollapsed ? "▸" : "▾"}</span>
-                  <span className="truncate">{group.name}</span>
+                  <span className="w-2 text-[9px] text-ink3 group-hover:text-ink2">{isCollapsed ? "▸" : "▾"}</span>
+                  <span className="text-[11px] font-medium tracking-[0.04em] text-ink2 group-hover:text-ink">
+                    {group.name}
+                  </span>
+                  <span className="mono ml-auto text-[10px] text-ink3">{group.items.length}</span>
                 </button>
               )}
               {!isCollapsed &&
@@ -79,14 +82,14 @@ export function Sidebar() {
                       }}
                       title={`${item.method} ${item.url}`}
                       className={cx(
-                        "motion group flex h-[28px] cursor-default items-center gap-1 pr-2 text-[12px]",
-                        group.name !== "" ? "pl-6" : "pl-3",
-                        active ? "bg-elevated text-ink" : "text-ink2 hover:bg-elevated/60 hover:text-ink",
+                        "motion group flex h-[28px] cursor-default items-center gap-1 pr-3 text-[12.5px]",
+                        group.name !== "" ? "pl-[26px]" : "pl-3.5",
+                        active ? "row-selected" : "text-ink2 hover:bg-elevated/70 hover:text-ink",
                       )}
                     >
-                      <MethodText method={item.method} className="w-9 shrink-0 text-[10px]" />
-                      <span className="truncate">{action}</span>
-                      <span className="ml-auto flex items-center gap-1.5 pl-1">
+                      <MethodText method={item.method} short className="w-9 shrink-0 text-[9.5px] tracking-[0.06em]" />
+                      <span className={cx("truncate", active && "font-medium")}>{action}</span>
+                      <span className="ml-auto flex shrink-0 items-center gap-1.5 pl-1">
                         {item.last_status ? (
                           <span
                             className={cx(
@@ -112,23 +115,29 @@ export function Sidebar() {
       </div>
 
       <div
-        className={cx("flex shrink-0 flex-col border-t border-line", pulseOpen ? "h-[28%] min-h-[120px]" : "h-[26px]")}
+        className={cx(
+          "flex shrink-0 flex-col border-t border-line",
+          pulseOpen ? "h-[30%] min-h-[128px]" : "h-[30px]",
+        )}
       >
         <button
           type="button"
           onDoubleClick={() => setPulseOpen((v) => !v)}
           onClick={() => setPulseOpen(true)}
-          className="flex h-[26px] shrink-0 items-center justify-between px-3 text-[10.5px] uppercase tracking-wide text-ink3"
+          className="flex h-[30px] shrink-0 items-center justify-between pl-3.5 pr-3"
           title="Double-click to collapse"
         >
-          <span>Activity pulse</span>
-          <span className="text-[9px]">{pulseOpen ? "▾" : "▸"}</span>
+          <span className="eyebrow">Activity pulse</span>
+          <span className="flex items-center gap-2">
+            <span className="mono text-[10px] text-ink3">{history.length}</span>
+            <span className="text-[9px] text-ink3">{pulseOpen ? "▾" : "▸"}</span>
+          </span>
         </button>
         {pulseOpen && (
-          <div className="scroll min-h-0 flex-1 overflow-y-auto pb-1">
-            {history.length === 0 && <div className="px-3 py-1 text-[11px] text-ink3">Nothing yet.</div>}
+          <div className="scroll min-h-0 flex-1 overflow-y-auto pb-1.5">
+            {history.length === 0 && <div className="px-3.5 py-1 text-[11.5px] text-ink3">Nothing yet.</div>}
             {history.map((log) => (
-              <PulseRow key={log.id} log={log} onClick={() => void openSnapshot(log.id)} />
+              <PulseRow key={log.id} log={log} active={snapshot?.id === log.id} onClick={() => void openSnapshot(log.id)} />
             ))}
           </div>
         )}
@@ -137,7 +146,7 @@ export function Sidebar() {
   );
 }
 
-function PulseRow({ log, onClick }: { log: Log; onClick: () => void }) {
+function PulseRow({ log, active, onClick }: { log: Log; active: boolean; onClick: () => void }) {
   const agent = log.actor === "agent";
   const name = log.api_id === "_adhoc" ? "adhoc" : log.api_id.slice(log.api_id.lastIndexOf("/") + 1);
   return (
@@ -149,19 +158,22 @@ function PulseRow({ log, onClick }: { log: Log; onClick: () => void }) {
         if (e.key === "Enter") onClick();
       }}
       title={`${log.method} ${log.url} · ${clockTime(log.ts)} · ${humanMS(log.duration_ms)}`}
-      className="motion flex h-[26px] cursor-default items-center gap-1.5 px-2.5 text-[11px] text-ink2 hover:bg-elevated"
+      className={cx(
+        "motion flex h-[27px] cursor-default items-center gap-1.5 pl-3 pr-3 text-[11.5px] hover:bg-elevated",
+        active ? "row-selected" : "text-ink2",
+      )}
     >
       <span
         className={cx(
-          "mono flex h-[13px] w-[13px] shrink-0 items-center justify-center rounded-[2px] text-[9px]",
-          agent ? "border border-secret/40 text-secret" : "border border-line text-ink3",
+          "mono flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-[3px] border text-[9px]",
+          agent ? "border-secret/50 text-secret" : "border-line-strong text-ink2",
         )}
       >
         {agent ? "A" : "H"}
       </span>
-      <MethodText method={log.method} className="w-8 shrink-0 text-[9.5px]" />
-      <span className="truncate text-[11px]">{name}</span>
-      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+      <MethodText method={log.method} short className="w-8 shrink-0 text-[9px] tracking-[0.05em]" />
+      <span className="truncate">{name}</span>
+      <span className="ml-auto flex shrink-0 items-center gap-2">
         <span className="mono text-[10px] text-ink3">{clockTime(log.ts)}</span>
         <StatusText status={log.status} />
       </span>

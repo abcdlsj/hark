@@ -24,7 +24,7 @@ export function Header() {
   };
 
   return (
-    <header className="flex h-[38px] shrink-0 items-center justify-between border-b border-line bg-canvas pl-[76px] pr-3">
+    <header className="flex h-[38px] shrink-0 items-center justify-between border-b border-line bg-canvas pl-[76px] pr-3.5">
       <DropdownMenu.Root
         onOpenChange={(open) => {
           if (open) void api.recents().then((list) => setRecents(list ?? []));
@@ -33,13 +33,13 @@ export function Header() {
         <DropdownMenu.Trigger asChild>
           <button
             type="button"
-            className="motion -ml-1 flex h-6 max-w-[360px] items-center gap-1.5 rounded-[5px] px-1.5 text-[12px] text-ink2 hover:bg-elevated hover:text-ink"
+            className="motion -ml-1 flex h-6 max-w-[380px] items-center gap-1.5 rounded-[5px] px-1.5 text-[12.5px] hover:bg-elevated"
             title={root}
           >
             <span className="truncate">
-              <span className="text-ink">apic</span>
+              <span className="text-ink3">apic</span>
               <span className="text-ink3"> / </span>
-              {workspace || "workspace"}
+              <span className="font-medium text-ink">{workspace || "workspace"}</span>
             </span>
             <span className="text-[9px] text-ink3">▾</span>
           </button>
@@ -96,11 +96,11 @@ export function Header() {
           <DropdownMenu.Trigger asChild>
             <button
               type="button"
-              className="motion flex h-6 items-center gap-1.5 rounded-[5px] border border-line px-2 text-[11.5px] text-ink2 hover:border-line-strong hover:text-ink"
+              className="motion flex h-[26px] items-center gap-1.5 rounded-[5px] border border-line px-2.5 text-[12px] text-ink hover:border-line-strong hover:bg-elevated"
               title="Switch environment (⌘E)"
             >
               <span className={cx("h-1.5 w-1.5 rounded-full", envTone(env))} />
-              <span className="mono text-[11.5px]">{env || "default"}</span>
+              <span className="mono text-[11.5px] font-medium">{env || "default"}</span>
               <span className="text-[9px] text-ink3">▾</span>
             </button>
           </DropdownMenu.Trigger>
@@ -138,7 +138,7 @@ export function Header() {
           <button
             type="button"
             onClick={() => set({ palette: true })}
-            className="motion flex h-6 items-center gap-1 rounded-[5px] border border-line px-2 text-[11px] text-ink2 hover:border-line-strong hover:text-ink"
+            className="motion flex h-[26px] items-center gap-1 rounded-[5px] border border-line px-2.5 text-[11px] text-ink2 hover:border-line-strong hover:bg-elevated hover:text-ink"
           >
             <span className="mono">⌘K</span>
           </button>
