@@ -241,27 +241,30 @@ export function OmniUrlBar() {
           )}
         </div>
 
-        {running ? (
-          <button
-            type="button"
-            onClick={() => void cancelRequest()}
-            className="motion flex h-[34px] shrink-0 items-center gap-1.5 rounded-[9px] border border-rose/30 bg-rose-soft px-3 text-[12px] font-semibold text-rose hover:border-rose/50"
-          >
-            <Square className="h-3 w-3 fill-current" />
-            <span>Cancel</span>
-            <span className="mono text-[10px] opacity-75">Esc</span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => void sendRequest()}
-            className="motion flex h-[34px] shrink-0 items-center gap-1.5 rounded-[9px] bg-cobalt px-3 text-[12px] font-semibold text-white shadow-xs hover:brightness-110 active:scale-[0.98]"
-          >
-            <Send className="h-3.5 w-3.5" strokeWidth={2.1} />
-            <span>Send</span>
-            <span className="mono rounded-[5px] bg-white/18 px-1 py-[1px] text-[10px] font-medium">⌘↵</span>
-          </button>
-        )}
+        {/* Fixed width so swapping send ⇄ cancel never resizes the URL capsule. */}
+        <div className="w-[106px] shrink-0">
+          {running ? (
+            <button
+              type="button"
+              onClick={() => void cancelRequest()}
+              className="motion flex h-[34px] w-full items-center justify-center gap-1.5 rounded-[9px] border border-rose/30 bg-rose-soft px-3 text-[12px] font-semibold text-rose hover:border-rose/50"
+            >
+              <Square className="h-3 w-3 fill-current" />
+              <span>Cancel</span>
+              <span className="mono text-[10px] opacity-75">Esc</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void sendRequest()}
+              className="motion flex h-[34px] w-full items-center justify-center gap-1.5 rounded-[9px] bg-cobalt px-3 text-[12px] font-semibold text-white shadow-xs hover:brightness-110 active:scale-[0.98]"
+            >
+              <Send className="h-3.5 w-3.5" strokeWidth={2.1} />
+              <span>Send</span>
+              <span className="mono rounded-[5px] bg-white/18 px-1 py-[1px] text-[10px] font-medium">⌘↵</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {hover && (

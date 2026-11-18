@@ -22,7 +22,7 @@ import { useStore } from "../store";
 import { CodeBlockEditor } from "./CodeBlockEditor";
 import { KVTable } from "./KVTable";
 import { OmniUrlBar } from "./OmniUrlBar";
-import { ActorTag, Button, cx, IconButton, Kbd, SegmentedTabs, Tip } from "./Primitives";
+import { ActorTag, Button, cx, IconButton, Kbd, SegmentedTabs, SwapText, Tip } from "./Primitives";
 import { VarField } from "./VarField";
 import { BodyNoneBlueprint, Spinner } from "./VisualStates";
 
@@ -135,8 +135,11 @@ export function RequestWorkbench() {
             title="Save endpoint (⌘S)"
           >
             {saving ? <Spinner className="h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" strokeWidth={2} />}
-            <span>{saving ? "Saving…" : dirty ? "Save" : "Saved"}</span>
-            {dirty && !saving && <Kbd className="border-white/25 bg-white/15 text-white">⌘S</Kbd>}
+            <SwapText value={saving ? "Saving…" : dirty ? "Save" : "Saved"} options={["Save", "Saved", "Saving…"]} />
+            {/* Kept mounted while idle so the shortcut chip cannot resize the button. */}
+            <Kbd className={cx("border-white/25 bg-white/15 text-white", !(dirty && !saving) && "invisible")}>
+              ⌘S
+            </Kbd>
           </Button>
 
           {/* Unified Import / Export cURL control */}
@@ -566,7 +569,7 @@ function IdentityPopover({
               </Button>
               <Button type="submit" size="sm" variant="primary" disabled={saving}>
                 {saving ? <Spinner className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
-                <span>{saving ? "Saving…" : "Save Endpoint"}</span>
+                <SwapText value={saving ? "Saving…" : "Save Endpoint"} options={["Save Endpoint", "Saving…"]} />
               </Button>
             </div>
           </form>

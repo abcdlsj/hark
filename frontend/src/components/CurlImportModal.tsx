@@ -2,7 +2,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowDownToLine, X } from "lucide-react";
 import { useState } from "react";
 import { useStore } from "../store";
-import { Button, IconButton, Kbd } from "./Primitives";
+import { Button, cx, IconButton, Kbd, SwapText } from "./Primitives";
 import { Spinner } from "./VisualStates";
 
 export function CurlImportModal() {
@@ -64,8 +64,8 @@ export function CurlImportModal() {
                 </Button>
                 <Button size="sm" variant="primary" onClick={() => void handleImport()} disabled={!text.trim() || importingCurl}>
                   {importingCurl ? <Spinner className="h-3.5 w-3.5" /> : <ArrowDownToLine className="h-3.5 w-3.5" strokeWidth={2} />}
-                  <span>{importingCurl ? "Parsing…" : "Import cURL"}</span>
-                  {!importingCurl && <Kbd className="border-white/25 bg-white/15 text-white">⌘↵</Kbd>}
+                  <SwapText value={importingCurl ? "Parsing…" : "Import cURL"} options={["Import cURL", "Parsing…"]} />
+                  <Kbd className={cx("border-white/25 bg-white/15 text-white", importingCurl && "invisible")}>⌘↵</Kbd>
                 </Button>
               </div>
             </div>

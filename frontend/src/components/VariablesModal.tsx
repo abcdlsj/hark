@@ -4,7 +4,7 @@ import { ChevronDown, KeyRound, Lock, ShieldCheck, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { VarItem } from "../lib/types";
 import { useStore } from "../store";
-import { Button, cx, EnvCapsule, IconButton } from "./Primitives";
+import { Button, cx, EnvCapsule, IconButton, SwapText } from "./Primitives";
 import { Spinner } from "./VisualStates";
 
 export function VariablesModal() {
@@ -217,7 +217,7 @@ export function VariablesModal() {
                 )}
               >
                 <ShieldCheck className="h-3.5 w-3.5" />
-                <span>{secret ? "OS Keychain Secret" : "Plain Text"}</span>
+                <SwapText value={secret ? "OS Keychain Secret" : "Plain Text"} options={["OS Keychain Secret", "Plain Text"]} />
               </button>
 
               <div className="ml-auto flex items-center gap-2">
@@ -226,7 +226,7 @@ export function VariablesModal() {
                 </Button>
                 <Button type="submit" size="sm" variant="primary" disabled={!key.trim() || savingVar}>
                   {savingVar && <Spinner className="h-3.5 w-3.5" />}
-                  <span>{savingVar ? "Saving…" : "Save Variable"}</span>
+                  <SwapText value={savingVar ? "Saving…" : "Save Variable"} options={["Save Variable", "Saving…"]} />
                 </Button>
               </div>
             </div>

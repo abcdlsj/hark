@@ -45,6 +45,39 @@ export function Kbd({ children, className }: { children: ReactNode; className?: 
   );
 }
 
+/**
+ * Renders one label out of several in a single grid cell, so the widest variant
+ * sets the box. Inactive labels stay in the layout (hidden, not removed), which
+ * keeps buttons from resizing when busy/idle text swaps.
+ *
+ * Use it for any control whose label changes with state; add the same pattern
+ * for hint chips that only appear in one state.
+ */
+export function SwapText({
+  value,
+  options,
+  className,
+}: {
+  value: string;
+  options: string[];
+  className?: string;
+}) {
+  const labels = options.includes(value) ? options : [...options, value];
+  return (
+    <span className={cx("inline-grid", className)}>
+      {labels.map((label) => (
+        <span
+          key={label}
+          aria-hidden={label !== value}
+          className={cx("col-start-1 row-start-1", label !== value && "invisible")}
+        >
+          {label}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export function IconButton({
   children,
   onClick,
@@ -346,10 +379,12 @@ export function EnvCapsule({
   env,
   size = "sm",
   interactive = false,
+  busy = false,
 }: {
   env: string;
   size?: "xs" | "sm";
   interactive?: boolean;
+  busy?: boolean;
 }) {
   const name = env || "default";
   const isProd = /prod|production|live/i.test(name);
@@ -371,7 +406,12 @@ export function EnvCapsule({
     >
       <span className={cx("h-1.5 w-1.5 rounded-full", dot)} />
       <span className="mono">{name}</span>
-      {interactive && <ChevronDown className="h-3 w-3 opacity-70" strokeWidth={2} />}
+      {/* Same 12px box in every state so switching environments cannot resize the capsule. */}
+      {busy ? (
+        <span className="h-3 w-3 animate-spin rounded-full border-[1.5px] border-current/25 border-t-current" />
+      ) : interactive ? (
+        <ChevronDown className="h-3 w-3 opacity-70" strokeWidth={2} />
+      ) : null}
     </span>
   );
 }

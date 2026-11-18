@@ -14,6 +14,7 @@ import {
   SegmentedBar,
   SegmentedTabs,
   StatusCapsule,
+  SwapText,
 } from "./Primitives";
 import { InspectorEmptyBlueprint, InspectorLoadingState } from "./VisualStates";
 
@@ -201,7 +202,7 @@ export function ResponseInspector() {
           {view?.body && (
             <Button size="xs" variant="secondary" onClick={() => void copyBody()}>
               {copied ? <Check className="h-3 w-3 text-emerald" /> : <Copy className="h-3 w-3" />}
-              <span>{copied ? "Copied" : "Copy"}</span>
+              <SwapText value={copied ? "Copied" : "Copy"} options={["Copy", "Copied"]} />
             </Button>
           )}
         </div>

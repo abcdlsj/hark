@@ -17,7 +17,6 @@ import { api } from "../lib/bridge";
 import { isMac } from "../lib/format";
 import { useStore } from "../store";
 import { cx, EnvCapsule, IconButton, Kbd, Tip } from "./Primitives";
-import { Spinner } from "./VisualStates";
 
 export function TopBar() {
   const {
@@ -212,14 +211,7 @@ export function TopBar() {
               disabled={switchingEnv}
               className="motion inline-flex items-center gap-1 rounded-full hover:brightness-95"
             >
-              {switchingEnv ? (
-                <span className="inline-flex h-[28px] items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 text-[11px] font-medium text-ink2">
-                  <Spinner className="h-3 w-3 text-cobalt" />
-                  <span className="mono">{env || "default"}</span>
-                </span>
-              ) : (
-                <EnvCapsule env={env} size="sm" interactive />
-              )}
+              <EnvCapsule env={env} size="sm" interactive busy={switchingEnv} />
             </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
