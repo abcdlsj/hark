@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useStore } from "../store";
 import type { ListItem, Log } from "../lib/types";
-import { clockTime, humanMS, methodPrefix } from "../lib/format";
+import { clockTime, humanMS } from "../lib/format";
 import { cx, Dot, MethodText, StatusText } from "./ui";
 
 interface Group {
@@ -180,5 +180,3 @@ function PulseRow({ log, active, onClick }: { log: Log; active: boolean; onClick
     </div>
   );
 }
-
-export { methodPrefix };
