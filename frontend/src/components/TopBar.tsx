@@ -340,21 +340,32 @@ function SidebarGlyph({ open }: { open: boolean }) {
 
 function BrandMark() {
   return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" className="shrink-0">
-      <rect x="2" y="2" width="16" height="16" rx="5" fill="url(#apicGrad)" />
-      <path
-        d="M6.5 13.5L10 6.2L13.5 13.5M7.8 11.2H12.2"
-        stroke="white"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg width="18" height="18" viewBox="0 0 32 32" fill="none" className="shrink-0" aria-hidden="true">
       <defs>
-        <linearGradient id="apicGrad" x1="2" y1="2" x2="18" y2="18" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#2563EB" />
-          <stop offset="1" stopColor="#7C3AED" />
+        <linearGradient id="apicMarkBg" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#0F172A" />
+          <stop offset="100%" stopColor="#17153B" />
+        </linearGradient>
+        <linearGradient id="apicMarkCore" x1="13.5" y1="13.5" x2="18.8" y2="18.8" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#38BDF8" />
+          <stop offset="50%" stopColor="#2563EB" />
+          <stop offset="100%" stopColor="#8B5CF6" />
         </linearGradient>
       </defs>
+      <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#apicMarkBg)" />
+      <rect x="1.6" y="1.6" width="28.8" height="28.8" rx="7.4" stroke="#FFFFFF" strokeOpacity="0.18" strokeWidth="1.2" />
+      <path
+        d="M 12.509 7.664 C 13.256 7.664 13.863 8.27 13.863 9.018 C 13.863 9.765 13.256 10.371 12.509 10.371 L 11.867 10.371 C 11.277 10.371 10.799 10.85 10.799 11.44 L 10.799 13.221 C 10.799 14.053 10.468 14.85 9.881 15.438 L 9.722 15.597 C 9.499 15.82 9.499 16.18 9.722 16.403 L 9.881 16.562 C 10.468 17.15 10.799 17.947 10.799 18.779 L 10.799 20.56 C 10.799 21.15 11.277 21.629 11.867 21.629 L 12.509 21.629 C 13.256 21.629 13.863 22.235 13.863 22.983 C 13.863 23.73 13.256 24.336 12.509 24.336 L 11.867 24.336 C 9.782 24.336 8.091 22.646 8.091 20.56 L 8.091 18.779 C 8.091 18.665 8.046 18.557 7.966 18.476 L 6.396 16.907 C 5.896 16.406 5.896 15.594 6.396 15.093 L 7.966 13.524 C 8.046 13.443 8.091 13.335 8.091 13.221 L 8.091 11.44 C 8.091 9.354 9.782 7.664 11.867 7.664 L 12.509 7.664 Z"
+        fill="#F8FAFC"
+      />
+      <path
+        d="M 16.788 9.975 C 16.26 9.446 16.26 8.589 16.788 8.06 C 17.317 7.532 18.174 7.532 18.703 8.06 L 25.534 14.892 C 26.146 15.504 26.146 16.496 25.534 17.108 L 18.703 23.94 C 18.174 24.468 17.317 24.468 16.788 23.94 C 16.26 23.411 16.26 22.554 16.788 22.025 L 22.36 16.453 C 22.611 16.203 22.611 15.797 22.36 15.547 L 16.788 9.975 Z"
+        fill="#F8FAFC"
+      />
+      <path
+        d="M 15.517 14.085 C 15.823 13.779 16.319 13.779 16.625 14.085 L 17.986 15.446 C 18.292 15.752 18.292 16.248 17.986 16.554 L 16.625 17.915 C 16.319 18.221 15.823 18.221 15.517 17.915 L 14.157 16.554 C 13.851 16.248 13.851 15.752 14.157 15.446 L 15.517 14.085 Z"
+        fill="url(#apicMarkCore)"
+      />
     </svg>
   );
 }
