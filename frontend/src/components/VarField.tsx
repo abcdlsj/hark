@@ -1,13 +1,12 @@
 import { useMemo, useRef, useState } from "react";
 import { useStore } from "../store";
-import { cx, VarSegments } from "./ui";
+import { cx, VarTokens } from "./Primitives";
 
 /**
- * A one-line input that keeps {{placeholders}} readable: a mirrored layer
- * renders the highlighted value and the real input sits on top with transparent
- * text, so the caret still behaves like a normal field.
+ * Single-line field that displays {{var}} tokens as styled pills when blurred
+ * while keeping standard input cursor/editing fidelity when focused.
  */
-export function VarInput({
+export function VarField({
   value,
   onChange,
   placeholder,
@@ -30,21 +29,23 @@ export function VarInput({
 
   return (
     <div className={cx("relative flex min-w-0 flex-1 items-center overflow-hidden", className)}>
-      <div
-        aria-hidden
-        className={cx(
-          "pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-pre px-2 text-[12.5px] leading-[28px] text-ink",
-          mono && "mono",
-        )}
-      >
-        <span className="truncate">
-          <VarSegments
-            value={value}
-            secret={(k) => secret.has(k)}
-            undefinedKey={(k) => !defined.has(k)}
-          />
-        </span>
-      </div>
+      {!focused && value && (
+        <div
+          aria-hidden
+          className={cx(
+            "pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-pre px-2.5 text-[12.5px] leading-[32px] text-ink",
+            mono && "mono",
+          )}
+        >
+          <span className="truncate">
+            <VarTokens
+              value={value}
+              secret={(k) => secret.has(k)}
+              undefinedKey={(k) => !defined.has(k)}
+            />
+          </span>
+        </div>
+      )}
       <input
         ref={input}
         value={value}
@@ -59,9 +60,9 @@ export function VarInput({
           if (onPasteBlob(raw)) e.preventDefault();
         }}
         className={cx(
-          "relative h-[28px] w-full min-w-0 bg-transparent px-2 text-[12.5px] leading-[28px] outline-none placeholder:text-ink3",
+          "relative h-[32px] w-full min-w-0 bg-transparent px-2.5 text-[12.5px] leading-[32px] outline-none placeholder:text-ink3",
           mono && "mono",
-          focused ? "text-ink caret-ink" : "text-transparent caret-transparent",
+          focused || !value ? "text-ink caret-cobalt" : "text-transparent caret-transparent",
         )}
       />
     </div>

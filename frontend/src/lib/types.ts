@@ -1,5 +1,5 @@
 // Wire types mirroring the Go models bound by Wails. Field names stay
-// snake_case on purpose: they travel over JSON unchanged.
+// snake_case so they match the serialized Go structs directly.
 
 export interface KV {
   key: string;
@@ -141,4 +141,4 @@ export const emptyApi = (id = ""): Api => ({
   meta: {},
 });
 
-export const enabled = (kv: KV): boolean => kv.enabled !== false;
+export const isEnabled = (kv: KV): boolean => kv.enabled !== false;

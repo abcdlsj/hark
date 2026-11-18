@@ -1,9 +1,7 @@
-// The single place the webview touches Go. Everything else talks to the store.
+// Single boundary between the React workbench and the Go AppService bindings.
 import { Events } from "@wailsio/runtime";
 import { AppService } from "../../bindings/github.com/abcdlsj/apic/cmd/desktop";
 import type { Api, Bootstrap, Log, ParseOut, RunRequest, RunView, SaveOut, VarItem } from "./types";
-
-export const isDesktop = (): boolean => typeof window !== "undefined" && "__wails" in window;
 
 export const api = {
   bootstrap: () => AppService.Bootstrap() as Promise<Bootstrap>,
@@ -36,7 +34,11 @@ export type EventName =
   | "env:changed"
   | "workspace:changed";
 
+const subscribed = new Set<string>();
+
 export const onEvent = (name: EventName, cb: (data: Record<string, unknown>) => void): void => {
+  if (subscribed.has(name)) return;
+  subscribed.add(name);
   Events.On(name, (event: { data: unknown }) => {
     const data = Array.isArray(event.data) ? event.data[0] : event.data;
     cb((data ?? {}) as Record<string, unknown>);

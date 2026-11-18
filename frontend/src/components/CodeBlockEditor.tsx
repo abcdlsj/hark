@@ -6,25 +6,41 @@ import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { tags } from "@lezer/highlight";
 import { useEffect, useRef } from "react";
 
-const quiet = EditorView.theme({
-  "&": { height: "100%", backgroundColor: "transparent", color: "var(--apic-ink)", fontSize: "12.5px" },
-  ".cm-content": { padding: "8px 0", fontFamily: "var(--font-mono)", lineHeight: "1.6", caretColor: "var(--apic-ink)" },
-  ".cm-line": { padding: "0 10px 0 6px" },
-  "&.cm-focused": { outline: "none" },
-  ".cm-scroller": { overflow: "auto" },
+const editorTheme = EditorView.theme({
+  "&": {
+    height: "100%",
+    backgroundColor: "transparent",
+    color: "var(--ink-1)",
+    fontSize: "12.5px",
+  },
+  ".cm-content": {
+    padding: "10px 0",
+    fontFamily: "var(--font-mono)",
+    lineHeight: "1.6",
+    caretColor: "var(--cobalt)",
+  },
+  ".cm-line": {
+    padding: "0 12px 0 8px",
+  },
+  "&.cm-focused": {
+    outline: "none",
+  },
+  ".cm-scroller": {
+    overflow: "auto",
+  },
 });
 
-const highlight = HighlightStyle.define([
-  { tag: tags.propertyName, color: "var(--apic-syn-key)" },
-  { tag: tags.string, color: "var(--apic-syn-string)" },
-  { tag: tags.number, color: "var(--apic-syn-number)" },
-  { tag: [tags.bool, tags.null], color: "var(--apic-syn-literal)" },
-  { tag: tags.punctuation, color: "var(--apic-ink-2)" },
-  { tag: tags.invalid, color: "var(--apic-delete)" },
+const tokenHighlight = HighlightStyle.define([
+  { tag: tags.propertyName, color: "var(--syn-key)" },
+  { tag: tags.string, color: "var(--syn-str)" },
+  { tag: tags.number, color: "var(--syn-num)" },
+  { tag: [tags.bool, tags.null], color: "var(--syn-lit)" },
+  { tag: tags.punctuation, color: "var(--ink-2)" },
+  { tag: tags.invalid, color: "var(--rose)" },
 ]);
 
-/** Read/write JSON editor with the chrome stripped: line numbers only. */
-export function JsonEditor({
+/** Clean CodeMirror 6 block editor for JSON and raw request/response bodies. */
+export function CodeBlockEditor({
   value,
   onChange,
   readOnly = false,
@@ -48,13 +64,15 @@ export function JsonEditor({
         lineNumbers(),
         history(),
         keymap.of([...defaultKeymap, ...historyKeymap]),
-        quiet,
-        syntaxHighlighting(highlight),
+        editorTheme,
+        syntaxHighlighting(tokenHighlight),
         ...(language ? [json()] : []),
         EditorState.readOnly.of(readOnly),
         EditorView.editable.of(!readOnly),
         EditorView.updateListener.of((update) => {
-          if (update.docChanged) onChangeRef.current?.(update.state.doc.toString());
+          if (update.docChanged) {
+            onChangeRef.current?.(update.state.doc.toString());
+          }
         }),
       ],
     });
@@ -64,7 +82,7 @@ export function JsonEditor({
       instance.destroy();
       view.current = null;
     };
-    // The document is synced below, so this effect only runs on mount.
+    // Document string updates are synced incrementally below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly, language]);
 

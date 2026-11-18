@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { useStore } from "./store";
-import { Header } from "./components/Header";
-import { Sidebar } from "./components/Sidebar";
-import { Composer } from "./components/Composer";
-import { ResponsePane } from "./components/ResponsePane";
 import { CommandPalette } from "./components/CommandPalette";
-import { VariablesDialog } from "./components/VariablesDialog";
-import { SnapshotBanner } from "./components/SnapshotBanner";
-import { Toast } from "./components/Toast";
-import { TooltipProvider } from "./components/ui";
+import { CurlImportModal } from "./components/CurlImportModal";
+import { Navigator } from "./components/Navigator";
+import { cx, TooltipProvider } from "./components/Primitives";
+import { RequestWorkbench } from "./components/RequestWorkbench";
+import { ResponseInspector } from "./components/ResponseInspector";
+import { ToastHost } from "./components/ToastHost";
+import { TopBar } from "./components/TopBar";
+import { VariablesModal } from "./components/VariablesModal";
+import { WorkspaceBootSkeleton } from "./components/VisualStates";
+import { WorkspaceOverview } from "./components/WorkspaceOverview";
+import { useStore } from "./store";
 
 const isTypingTarget = (target: EventTarget | null): boolean => {
   const el = target as HTMLElement | null;
@@ -20,32 +22,33 @@ const isTypingTarget = (target: EventTarget | null): boolean => {
 
 export function App() {
   const {
-    boot,
+    booted,
     theme,
-    sidebar,
+    sidebarOpen,
     layout,
+    splitRatio,
     editor,
-    newDraft,
-    send,
-    save,
-    cancel,
     running,
-    set,
+    boot,
+    newDraft,
+    sendRequest,
+    saveEditor,
+    cancelRequest,
     copyCurl,
-    pasteCurl,
-    error,
+    importCurl,
+    set,
   } = useStore();
-  const [split, setSplit] = useState(0.52);
-  const [wide, setWide] = useState(() => typeof window !== "undefined" && window.innerWidth >= 1200);
+
+  const [wide, setWide] = useState(() => typeof window !== "undefined" && window.innerWidth >= 1120);
   const dragging = useRef(false);
-  const shell = useRef<HTMLDivElement>(null);
+  const splitContainer = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     void boot();
   }, [boot]);
 
   useEffect(() => {
-    const onResize = () => setWide(window.innerWidth >= 1200);
+    const onResize = () => setWide(window.innerWidth >= 1120);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -55,23 +58,22 @@ export function App() {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
-  // Global shortcuts. ⌘↵ and ⌘S work from inside editors too.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const mod = event.metaKey || event.ctrlKey;
       if (mod && event.key === "Enter") {
         event.preventDefault();
-        void send();
+        void sendRequest();
         return;
       }
       if (mod && event.key.toLowerCase() === "s") {
         event.preventDefault();
-        void save();
+        void saveEditor();
         return;
       }
       if (mod && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        set({ palette: !useStore.getState().palette });
+        set({ paletteOpen: !useStore.getState().paletteOpen });
         return;
       }
       if (mod && event.key.toLowerCase() === "n") {
@@ -81,12 +83,12 @@ export function App() {
       }
       if (mod && event.key.toLowerCase() === "b") {
         event.preventDefault();
-        set({ sidebar: !useStore.getState().sidebar });
+        set({ sidebarOpen: !useStore.getState().sidebarOpen });
         return;
       }
       if (mod && event.key.toLowerCase() === "e") {
         event.preventDefault();
-        set({ envMenu: !useStore.getState().envMenu });
+        set({ envMenuOpen: !useStore.getState().envMenuOpen });
         return;
       }
       if (mod && event.shiftKey && event.key.toLowerCase() === "c") {
@@ -96,40 +98,40 @@ export function App() {
       }
       if (event.key === "Escape") {
         if (running) {
-          void cancel();
+          void cancelRequest();
           return;
         }
         if (useStore.getState().snapshot) {
           set({ snapshot: null });
-          return;
         }
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [cancel, copyCurl, newDraft, running, save, send, set]);
+  }, [cancelRequest, copyCurl, newDraft, running, saveEditor, sendRequest, set]);
 
-  // Magic paste: a cURL command on the clipboard anywhere outside a text field.
   useEffect(() => {
     const onPaste = (event: ClipboardEvent) => {
       if (isTypingTarget(event.target)) return;
       const text = event.clipboardData?.getData("text") ?? "";
       if (!text.trim().toLowerCase().startsWith("curl")) return;
       event.preventDefault();
-      void pasteCurl(text);
+      void importCurl(text);
     };
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
-  }, [pasteCurl]);
+  }, [importCurl]);
 
   useEffect(() => {
     const onMove = (event: MouseEvent) => {
-      if (!dragging.current || !shell.current) return;
-      const rect = shell.current.getBoundingClientRect();
+      if (!dragging.current || !splitContainer.current) return;
+      const rect = splitContainer.current.getBoundingClientRect();
+      if (rect.width <= 0) return;
       const ratio = (event.clientX - rect.left) / rect.width;
-      setSplit(Math.min(0.8, Math.max(0.2, ratio)));
+      set({ splitRatio: Math.min(0.76, Math.max(0.24, ratio)) });
     };
     const onUp = () => {
+      if (!dragging.current) return;
       dragging.current = false;
       document.body.style.cursor = "";
     };
@@ -139,27 +141,45 @@ export function App() {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     };
-  }, []);
+  }, [set]);
 
   const sideBySide = layout === "split" && wide;
 
   return (
     <TooltipProvider>
-      <div className="flex h-full w-full flex-col overflow-hidden bg-canvas text-ink">
-        <Header />
-        <div className="flex min-h-0 flex-1">
-          {sidebar && <Sidebar />}
-          <main className="flex min-w-0 flex-1 flex-col">
-            <SnapshotBanner />
-            {!editor ? (
-              <EmptyWorkspace error={error} onNew={newDraft} />
-            ) : (
-              <>
-                <div ref={shell} className="flex min-h-0 flex-1 flex-col">
+      <div className="flex h-full w-full flex-col overflow-hidden bg-frame text-ink">
+        <TopBar />
+
+        {!booted ? (
+          <WorkspaceBootSkeleton sidebarOpen={sidebarOpen} />
+        ) : (
+          <div className="flex min-h-0 flex-1 px-2.5 pb-2.5">
+            <div
+              aria-hidden={!sidebarOpen}
+              className={cx(
+                "shrink-0 overflow-hidden transition-[width,margin,opacity] duration-220 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                sidebarOpen ? "mr-2.5 w-[258px] opacity-100" : "pointer-events-none mr-0 w-0 opacity-0",
+              )}
+            >
+              <div
+                className={cx(
+                  "flex h-full w-[258px] transition-transform duration-220 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                  sidebarOpen ? "translate-x-0" : "-translate-x-3",
+                )}
+              >
+                <Navigator />
+              </div>
+            </div>
+
+            <main key={editor ? "workbench" : "overview"} className="anim-fade-up flex min-w-0 flex-1 flex-col">
+              {!editor ? (
+                <WorkspaceOverview />
+              ) : (
+                <div ref={splitContainer} className="flex min-h-0 flex-1 flex-col">
                   {sideBySide ? (
                     <div className="flex min-h-0 flex-1">
-                      <div className="flex min-w-0 flex-col" style={{ width: `${split * 100}%` }}>
-                        <Composer />
+                      <div className="flex min-w-0 flex-col" style={{ width: `${splitRatio * 100}%` }}>
+                        <RequestWorkbench />
                       </div>
                       <div
                         role="separator"
@@ -168,57 +188,35 @@ export function App() {
                           dragging.current = true;
                           document.body.style.cursor = "col-resize";
                         }}
-                        className="motion w-px shrink-0 cursor-col-resize bg-line hover:bg-line-strong"
-                      />
+                        className="group flex w-2.5 shrink-0 cursor-col-resize items-center justify-center"
+                      >
+                        <span className="motion h-10 w-[3px] rounded-full bg-line group-hover:h-16 group-hover:bg-cobalt/60" />
+                      </div>
                       <div className="flex min-w-0 flex-1 flex-col">
-                        <ResponsePane />
+                        <ResponseInspector />
                       </div>
                     </div>
                   ) : (
-                    <>
-                      <div className="flex min-h-[42%] flex-1 flex-col border-b border-line">
-                        <Composer />
+                    <div className="flex min-h-0 flex-1 flex-col gap-2.5">
+                      <div className="flex min-h-[45%] flex-1 flex-col">
+                        <RequestWorkbench />
                       </div>
-                      <div className="flex min-h-[34%] flex-1 flex-col">
-                        <ResponsePane />
+                      <div className="flex min-h-[38%] flex-1 flex-col">
+                        <ResponseInspector />
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
-              </>
-            )}
-          </main>
-        </div>
+              )}
+            </main>
+          </div>
+        )}
+
         <CommandPalette />
-        <VariablesDialog />
-        <Toast />
+        <VariablesModal />
+        <CurlImportModal />
+        <ToastHost />
       </div>
     </TooltipProvider>
-  );
-}
-
-function EmptyWorkspace({ error, onNew }: { error: string | null; onNew: () => void }) {
-  return (
-    <div className="flex h-full flex-col items-start justify-start gap-3 px-6 pt-[10%]">
-      {error ? (
-        <p className="mono text-[11.5px] leading-relaxed text-del">{error}</p>
-      ) : (
-        <>
-          <p className="text-[13px] text-ink">No request open.</p>
-          <div className="mono text-[12px] leading-[2.1] text-ink2">
-            <div>⌘N New request</div>
-            <div>⌘V Paste cURL</div>
-            <div>⌘K Command palette</div>
-          </div>
-          <button
-            type="button"
-            onClick={onNew}
-            className="motion mt-1 rounded-[5px] border border-line-strong bg-elevated px-3 py-1.5 text-[12px] text-ink hover:border-ink3"
-          >
-            New request
-          </button>
-        </>
-      )}
-    </div>
   );
 }

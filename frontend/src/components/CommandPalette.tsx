@@ -1,23 +1,22 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { api } from "../lib/bridge";
-import { useStore } from "../store";
+import { CornerDownLeft, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import type { ListItem } from "../lib/types";
-import { cx, Kbd, MethodText } from "./ui";
+import { useStore } from "../store";
+import { cx, Kbd, MethodBadge } from "./Primitives";
 
-interface Command {
+interface CommandItem {
   id: string;
   label: string;
   hint?: string;
+  method?: string;
   run: () => void;
 }
 
-/** Subsequence match, so "ord ref" finds orders/refund. */
-function score(text: string, query: string): number {
+function scoreMatch(text: string, query: string): number {
   if (!query) return 1;
   const hay = text.toLowerCase();
   const needle = query.toLowerCase().replace(/\s+/g, "");
-  // A contiguous hit always outranks a scattered subsequence.
   const at = hay.indexOf(needle);
   if (at >= 0) return 1000 - at;
   let i = 0;
@@ -35,154 +34,214 @@ function score(text: string, query: string): number {
 
 export function CommandPalette() {
   const {
-    palette,
-    set,
-    select,
-    newDraft,
-    switchEnv,
+    paletteOpen,
+    editor,
+    apis,
     environments,
     env,
-    apis,
     layout,
     theme,
-    toggleTheme,
+    set,
+    selectApi,
+    newDraft,
+    closeEditor,
+    sendRequest,
+    saveEditor,
     copyCurl,
-    send,
-    save,
+    copyGuide,
     openVars,
-    notify,
+    switchEnv,
+    reloadWorkspace,
+    pruneHistory,
+    toggleTheme,
   } = useStore();
+
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
-  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (palette) {
+    if (paletteOpen) {
       setQuery("");
       setActive(0);
     }
-  }, [palette]);
+  }, [paletteOpen]);
 
-  const commands = useMemo<Command[]>(() => {
-    const base: Command[] = [
+  const commands = useMemo<CommandItem[]>(() => {
+    const list: CommandItem[] = [
       {
         id: "new",
         label: "New request",
         hint: "⌘N",
         run: () => {
           newDraft();
-          set({ palette: false });
+          set({ paletteOpen: false });
         },
       },
       {
-        id: "send",
-        label: "Send current request",
-        hint: "⌘↵",
+        id: "import-curl",
+        label: "Import cURL command…",
         run: () => {
-          set({ palette: false });
-          void send();
-        },
-      },
-      {
-        id: "save",
-        label: "Save current request",
-        hint: "⌘S",
-        run: () => {
-          set({ palette: false });
-          void save();
-        },
-      },
-      {
-        id: "curl",
-        label: "Copy current request as cURL",
-        hint: "⌘⇧C",
-        run: () => {
-          set({ palette: false });
-          void copyCurl(false);
-        },
-      },
-      {
-        id: "guide",
-        label: "Copy agent CLI guide prompt",
-        run: () => {
-          void api.guide().then((text) => {
-            void navigator.clipboard.writeText(text);
-            notify("Copied the agent guide");
-          });
-          set({ palette: false });
+          set({ paletteOpen: false, curlModalOpen: true });
         },
       },
       {
         id: "vars",
-        label: "Manage environment variables…",
+        label: "Manage variables & OS keychain…",
         run: () => {
-          set({ palette: false });
+          set({ paletteOpen: false });
           openVars();
+        },
+      },
+      {
+        id: "guide",
+        label: "Copy AI agent CLI guide",
+        run: () => {
+          set({ paletteOpen: false });
+          void copyGuide();
+        },
+      },
+      {
+        id: "overview",
+        label: "Go to workspace overview",
+        run: () => {
+          closeEditor();
+          set({ paletteOpen: false });
         },
       },
       {
         id: "layout",
         label: layout === "split" ? "Switch to stacked layout" : "Switch to side-by-side layout",
         run: () => {
-          set({ layout: layout === "split" ? "stack" : "split", palette: false });
+          set({ layout: layout === "split" ? "stack" : "split", paletteOpen: false });
         },
       },
       {
         id: "theme",
-        label: theme === "dark" ? "Switch to light theme" : "Switch to dark theme",
+        label: theme === "dark" ? "Switch to Porcelain Light theme" : "Switch to Velvet Obsidian Dark theme",
         run: () => {
           toggleTheme();
-          set({ palette: false });
+          set({ paletteOpen: false });
+        },
+      },
+      {
+        id: "reload",
+        label: "Reload workspace from disk",
+        run: () => {
+          set({ paletteOpen: false });
+          void reloadWorkspace();
         },
       },
       {
         id: "trim",
         label: "Trim history to 500 runs",
         run: () => {
-          void api.prune(500).then(() => notify("History trimmed"));
-          set({ palette: false });
+          set({ paletteOpen: false });
+          void pruneHistory(500);
         },
       },
     ];
+
+    if (editor) {
+      list.unshift(
+        {
+          id: "send",
+          label: "Send current request",
+          hint: "⌘↵",
+          run: () => {
+            set({ paletteOpen: false });
+            void sendRequest();
+          },
+        },
+        {
+          id: "save",
+          label: "Save current request",
+          hint: "⌘S",
+          run: () => {
+            set({ paletteOpen: false });
+            void saveEditor();
+          },
+        },
+        {
+          id: "curl",
+          label: "Export current request as cURL",
+          hint: "⌘⇧C",
+          run: () => {
+            set({ paletteOpen: false });
+            void copyCurl(false);
+          },
+        },
+        {
+          id: "curl-resolved",
+          label: "Export current request as cURL (resolved values)",
+          run: () => {
+            set({ paletteOpen: false });
+            void copyCurl(true);
+          },
+        },
+      );
+    }
+
     for (const name of environments) {
-      base.push({
+      list.push({
         id: `env:${name}`,
         label: `Switch environment → ${name}`,
-        hint: name === env ? "current" : undefined,
+        hint: name === env ? "active" : undefined,
         run: () => {
+          set({ paletteOpen: false });
           void switchEnv(name);
-          set({ palette: false });
         },
       });
     }
-    return base;
-  }, [environments, env, layout, theme, copyCurl, newDraft, notify, openVars, save, send, set, switchEnv, toggleTheme]);
+
+    return list;
+  }, [
+    editor,
+    environments,
+    env,
+    layout,
+    theme,
+    closeEditor,
+    copyCurl,
+    copyGuide,
+    newDraft,
+    openVars,
+    pruneHistory,
+    reloadWorkspace,
+    saveEditor,
+    sendRequest,
+    set,
+    switchEnv,
+    toggleTheme,
+  ]);
 
   const results = useMemo(() => {
     const actionsOnly = query.startsWith(">");
     const term = actionsOnly ? query.slice(1) : query;
-    const apiHits = actionsOnly
+
+    const apiHits: CommandItem[] = actionsOnly
       ? []
       : apis
-      .map((item: ListItem) => ({ item, s: score(`${item.id} ${item.name}`, term) }))
-      .filter((r) => r.s > 0)
-      .sort((a, b) => b.s - a.s)
-      .map(({ item }) => ({
-        id: `api:${item.id}`,
-        label: item.id,
-        hint: item.method,
-        run: () => {
-          void select(item.id);
-          set({ palette: false });
-        },
-      }));
+          .map((item: ListItem) => ({ item, score: scoreMatch(`${item.id} ${item.name}`, term) }))
+          .filter((r) => r.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .map(({ item }) => ({
+            id: `api:${item.id}`,
+            label: item.name && item.name !== item.id ? `${item.name} · ${item.id}` : item.id,
+            method: item.method,
+            run: () => {
+              set({ paletteOpen: false });
+              void selectApi(item.id);
+            },
+          }));
+
     const cmdHits = commands
-      .map((cmd) => ({ cmd, s: score(cmd.label, term) }))
-      .filter((r) => r.s > 0)
-      .sort((a, b) => b.s - a.s)
+      .map((cmd) => ({ cmd, score: scoreMatch(cmd.label, term) }))
+      .filter((r) => r.score > 0)
+      .sort((a, b) => b.score - a.score)
       .map(({ cmd }) => cmd);
-    return [...apiHits, ...cmdHits].slice(0, 8);
-  }, [apis, commands, query, select, set]);
+
+    return [...apiHits, ...cmdHits].slice(0, 10);
+  }, [apis, commands, query, selectApi, set]);
 
   useEffect(() => {
     setActive(0);
@@ -202,55 +261,71 @@ export function CommandPalette() {
   };
 
   return (
-    <Dialog.Root open={palette} onOpenChange={(open) => set({ palette: open })}>
+    <Dialog.Root open={paletteOpen} onOpenChange={(open) => set({ paletteOpen: open })}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/25" />
+        <Dialog.Overlay className="dialog-overlay fixed inset-0 z-40 bg-black/25 backdrop-blur-[2px]" />
         <Dialog.Content
-          className="overlay motion fixed left-1/2 top-[18%] z-50 w-[520px] -translate-x-1/2 overflow-hidden rounded-[8px]"
+          className="floating-surface dialog-content fixed left-1/2 top-[16%] z-50 w-[92vw] max-w-[540px] -translate-x-1/2 overflow-hidden rounded-[14px]"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <Dialog.Title className="sr-only">Command palette</Dialog.Title>
-          <input
-            autoFocus
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder="Search requests or type > for actions"
-            className="h-[38px] w-full border-b border-line bg-transparent px-3 text-[12.5px] text-ink outline-none placeholder:text-ink3"
-          />
-          <div ref={listRef} className="max-h-[280px] overflow-y-auto py-1">
-            {results.length === 0 && <div className="px-3 py-2 text-[11.5px] text-ink3">Nothing matches.</div>}
-            {results.map((result, index) => (
-              <div
-                key={result.id}
-                onMouseEnter={() => setActive(index)}
-                onClick={() => result.run()}
-                className={cx(
-                  "mx-1 flex h-[28px] cursor-default items-center gap-2 rounded-[4px] px-2 text-[12px]",
-                  index === active ? "bg-elevated text-ink" : "text-ink2",
-                )}
-              >
-                {result.hint && /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)$/.test(result.hint) ? (
-                  <MethodText method={result.hint} className="w-9 shrink-0 text-[10px]" />
-                ) : (
-                  <span className="w-9 shrink-0 text-[10px] text-ink3">{index === active ? "↵" : ""}</span>
-                )}
-                <span className="truncate">{result.label}</span>
-                {result.hint && !/^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)$/.test(result.hint) && (
-                  <span className="ml-auto mono text-[10px] text-ink3">{result.hint}</span>
-                )}
-              </div>
-            ))}
+          <div className="flex h-[46px] items-center gap-2.5 border-b border-line px-3.5">
+            <Search className="h-4 w-4 shrink-0 text-ink3" strokeWidth={1.9} />
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={onKeyDown}
+              placeholder="Search endpoints or type > for actions…"
+              className="h-full w-full bg-transparent text-[13px] text-ink placeholder:text-ink3"
+            />
           </div>
-          <div className="flex h-[26px] items-center gap-3 border-t border-line px-3 text-[10px] text-ink3">
-            <span className="flex items-center gap-1">
+
+          <div className="scroll max-h-[320px] overflow-y-auto p-1.5">
+            {results.length === 0 ? (
+              <div className="px-3 py-6 text-center text-[12px] text-ink3">No matching endpoints or commands.</div>
+            ) : (
+              results.map((result, index) => (
+                <button
+                  key={result.id}
+                  type="button"
+                  onMouseEnter={() => setActive(index)}
+                  onClick={() => result.run()}
+                  className={cx(
+                    "motion flex h-[36px] w-full items-center gap-2.5 rounded-[9px] px-2.5 text-left text-[12.5px]",
+                    index === active ? "bg-cobalt-soft text-ink" : "text-ink2 hover:bg-subtle",
+                  )}
+                >
+                  {result.method ? (
+                    <MethodBadge method={result.method} short className="w-[44px] shrink-0 justify-center" />
+                  ) : (
+                    <span className="flex w-[44px] shrink-0 items-center justify-center text-ink3">
+                      <CornerDownLeft className={cx("h-3.5 w-3.5", index !== active && "opacity-35")} />
+                    </span>
+                  )}
+                  <span className={cx("min-w-0 flex-1 truncate", index === active && "font-medium")}>
+                    {result.label}
+                  </span>
+                  {result.hint && (
+                    <span className="mono shrink-0 text-[10.5px] text-ink3">{result.hint}</span>
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+
+          <div className="flex h-[32px] items-center gap-4 border-t border-line bg-subtle/60 px-3.5 text-[11px] text-ink3">
+            <span className="inline-flex items-center gap-1">
               <Kbd>↑</Kbd>
               <Kbd>↓</Kbd> navigate
             </span>
-            <span className="flex items-center gap-1">
-              <Kbd>↵</Kbd> run
+            <span className="inline-flex items-center gap-1">
+              <Kbd>↵</Kbd> select
             </span>
-            <span className="flex items-center gap-1">
+            <span className="inline-flex items-center gap-1">
+              <Kbd>&gt;</Kbd> actions only
+            </span>
+            <span className="ml-auto inline-flex items-center gap-1">
               <Kbd>esc</Kbd> close
             </span>
           </div>
