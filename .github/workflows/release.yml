@@ -17,6 +17,7 @@ concurrency:
 
 env:
   WAILS_VERSION: v3.0.0
+  TASK_VERSION: v3.54.0
 
 jobs:
   darwin:
@@ -34,9 +35,7 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - uses: arduino/setup-task@v2
-        with:
-          version: 3.x
+      - run: go install github.com/go-task/task/v3/cmd/task@${{ env.TASK_VERSION }}
       - run: go install github.com/wailsapp/wails/v3/cmd/wails3@${{ env.WAILS_VERSION }}
       - name: Resolve version
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
@@ -75,9 +74,7 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - uses: arduino/setup-task@v2
-        with:
-          version: 3.x
+      - run: go install github.com/go-task/task/v3/cmd/task@${{ env.TASK_VERSION }}
       - run: go install github.com/wailsapp/wails/v3/cmd/wails3@${{ env.WAILS_VERSION }}
       - name: Resolve version
         shell: bash
@@ -118,9 +115,7 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - uses: arduino/setup-task@v2
-        with:
-          version: 3.x
+      - run: go install github.com/go-task/task/v3/cmd/task@${{ env.TASK_VERSION }}
       - run: go install github.com/wailsapp/wails/v3/cmd/wails3@${{ env.WAILS_VERSION }}
       - name: Resolve version
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
