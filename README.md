@@ -13,8 +13,28 @@ you and your agent can drive, from the desktop window or the CLI.
 
 ## Status
 
-Milestone 1 (core + CLI) is complete. Desktop canvas and IPC wiring follow
-`docs/PLAN.md`.
+All three milestones in `docs/PLAN.md` are implemented: the shared core, the
+CLI, the desktop canvas and the dual-mode IPC link.
+
+## Desktop
+
+```sh
+task build      # bin/apic.app (macOS), or the platform equivalent
+task dev        # Wails dev mode with Vite hot reload
+```
+
+The window is frameless: 38px header, 248px sidebar (⌘B), one-line URL bar with
+`{{placeholder}}` pills, spreadsheet-style key/value grid, request/response
+split (drag the divider; stacks below 1200px), and a response inspector with
+per-phase timings.
+
+Shortcuts: ⌘↵ send · ⌘S save · ⌘K palette · ⌘N new · ⌘B sidebar · ⌘E
+environment · ⌘⇧C copy cURL · Esc cancel or leave a snapshot. Pasting a `curl`
+command anywhere outside a text field imports it.
+
+While the window is open it owns the workspace through `ipc.sock`, so agent
+writes appear live: a dot on changed APIs, rows in Activity Pulse, and a
+read-only snapshot banner when you open an agent run.
 
 ## Install the CLI
 

@@ -10,7 +10,7 @@ Derived from the product spec. Each step is independently verifiable with `go te
 
 ## Milestone 1 · Core loop and CLI first
 
-| # | Step | Deliverable |
+| # | Step | Delivered |
 | --- | --- | --- |
 | 1 | Data model and workspace | `internal/core/model`: `Envs`, `API`, `KV`; workspace resolution (`APIC_WORKSPACE` → ancestor probe → `~/.apic`) |
 | 2 | YAML storage | `internal/core/store`: `collections/<module>/<action>.yaml` ↔ `api_id`; atomic writes (tmp + rename); `envs.yaml` read/write with cache invalidation |
@@ -24,9 +24,9 @@ Derived from the product spec. Each step is independently verifiable with `go te
 
 Exit criteria: `apic save orders/refund --stdin <<'EOF' ... EOF`, `apic run orders/refund --json` and `apic guide` all work from a terminal.
 
-## Milestone 2 · Desktop canvas and design system
+## Milestone 2 · Desktop canvas and design system (done)
 
-| # | Step | Deliverable |
+| # | Step | Delivered |
 | --- | --- | --- |
 | 10 | Wails services | `cmd/desktop`: frameless immersive title bar; workspace, API, env, history and run services all delegate to `internal/core/ops` |
 | 11 | Design system | Tailwind + CSS variables for the spec's color tokens, dual typefaces, 4px rhythm, no-shadow rule |
@@ -34,9 +34,9 @@ Exit criteria: `apic save orders/refund --stdin <<'EOF' ... EOF`, `apic run orde
 | 13 | Key components | CodeMirror 6 single-line `{{var}}` pill URL bar, borderless spreadsheet KV grid, Body/Auth tabs, response inspector (Pretty/Raw/Headers + timing waterfall) |
 | 14 | Interaction flows | ⌘V magic paste, ⌘K command palette, ⌘↵/⌘S/⌘N/⌘B/⌘E/⌘⇧C/Esc shortcuts, in-flight cancel |
 
-## Milestone 3 · Dual-mode IPC and polish
+## Milestone 3 · Dual-mode IPC and polish (done)
 
-| # | Step | Deliverable |
+| # | Step | Delivered |
 | --- | --- | --- |
 | 15 | IPC protocol | `internal/core/ipc`: Unix socket + newline-delimited JSON; desktop is the only writer, CLI dials with a 5ms timeout |
 | 16 | Live events | Wails events `api:saved_by_agent`, `run:completed`, `history:appended`; sidebar agent dot, live pulse stream |
