@@ -6,15 +6,11 @@ A local-first, quiet API workbench for humans and AI agents.
 isolation with secrets in the OS keychain; and one shared workspace that both
 you and your agent can drive, from the desktop window or the CLI.
 
-- **Desktop**: Wails v3 + React + Tailwind + CodeMirror 6, frameless, dark-first.
+- **Desktop**: Wails v3 + React + Tailwind + CodeMirror 6, frameless, light with
+  a dark theme toggle.
 - **CLI**: `apic guide`, `ls`, `show`, `save`, `run`, `var` — the agent entry point.
 - **Core**: one Go package tree (`internal/core`) behind both, so ⌘↵ and
   `apic run` behave identically.
-
-## Status
-
-All three milestones in `docs/PLAN.md` are implemented: the shared core, the
-CLI, the desktop canvas and the dual-mode IPC link.
 
 ## Desktop
 
@@ -23,10 +19,10 @@ task build      # bin/apic.app (macOS), or the platform equivalent
 task dev        # Wails dev mode with Vite hot reload
 ```
 
-The window is frameless: 38px header, 248px sidebar (⌘B), one-line URL bar with
-`{{placeholder}}` pills, spreadsheet-style key/value grid, request/response
-split (drag the divider; stacks below 1200px), and a response inspector with
-per-phase timings.
+The window is frameless: 44px header, 258px sidebar (⌘B), a workspace overview
+as the landing page, one-line URL bar with `{{placeholder}}` pills,
+spreadsheet-style key/value grid, request/response split (drag the divider;
+stacks below 1200px), and a response inspector with per-phase timings.
 
 Shortcuts: ⌘↵ send · ⌘S save · ⌘K palette · ⌘N new · ⌘B sidebar · ⌘E
 environment · ⌘⇧C copy cURL · Esc cancel or leave a snapshot. Pasting a `curl`
@@ -36,7 +32,10 @@ While the window is open it owns the workspace through `ipc.sock`, so agent
 writes appear live: a dot on changed APIs, rows in Activity Pulse, and a
 read-only snapshot banner when you open an agent run.
 
-## Install the CLI
+## Install
+
+Prebuilt desktop apps for macOS, Windows and Linux are attached to every
+[release](https://github.com/abcdlsj/apic/releases). The CLI installs with Go:
 
 ```sh
 go install github.com/abcdlsj/apic/cmd/apic@latest
@@ -76,3 +75,7 @@ go test ./...
 go run ./cmd/apic guide
 task dev        # Wails dev mode (desktop)
 ```
+
+Releasing is a tag: `git tag v0.1.0 && git push origin v0.1.0`. The release
+workflow builds macOS (universal), Windows and Linux, stamps the version into
+the platform metadata and attaches the archives to the GitHub release.
