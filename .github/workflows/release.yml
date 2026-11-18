@@ -1,0 +1,169 @@
+name: release
+
+# Tagging vX.Y.Z builds the desktop app on macOS, Windows and Linux and attaches
+# the archives to a GitHub release. The version in build/config.yml and the
+# platform metadata is stamped from the tag, so nothing needs editing by hand.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  WAILS_VERSION: v3.0.0
+
+jobs:
+  darwin:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+      - run: go install github.com/wailsapp/wails/v3/cmd/wails3@${{ env.WAILS_VERSION }}
+      - name: Resolve version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+      - run: node build/stamp-version.mjs "$VERSION"
+      - run: npm ci
+        working-directory: frontend
+      # Builds arm64 and amd64 and lipos them, so one runner covers both Macs.
+      - run: task darwin:package:universal
+      - name: Package
+        run: |
+          set -euo pipefail
+          wails3 tool package --format dmg --name apic --out bin \
+            --background build/darwin/dmg-background.png \
+            --volume-icon build/darwin/icons.icns \
+            --file-icon build/darwin/dmg-file-icon.icns \
+            --window-width 540 --window-height 380
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent bin/apic.app "dist/apic_${VERSION}_darwin_universal.zip"
+          mv bin/apic.dmg "dist/apic_${VERSION}_darwin_universal.dmg"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: darwin
+          path: dist/*
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+      - run: go install github.com/wailsapp/wails/v3/cmd/wails3@${{ env.WAILS_VERSION }}
+      - name: Resolve version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+      - run: node build/stamp-version.mjs "$VERSION"
+        shell: bash
+      - run: npm ci
+        working-directory: frontend
+      - run: task windows:build
+        shell: bash
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Compress-Archive -Path bin/apic.exe -DestinationPath "dist/apic_$($env:VERSION)_windows_amd64.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*
+          if-no-files-found: error
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+      - run: go install github.com/wailsapp/wails/v3/cmd/wails3@${{ env.WAILS_VERSION }}
+      - name: Resolve version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+      - run: node build/stamp-version.mjs "$VERSION"
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+      - run: npm ci
+        working-directory: frontend
+      - run: task linux:build
+      - name: Package
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          tar -C bin -czf "dist/apic_${VERSION}_linux_amd64.tar.gz" apic
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    needs: [darwin, windows, linux]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Release notes
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          cat > NOTES.md <<EOF
+          apic ${VERSION} — first public desktop build.
+
+          ## Assets
+
+          | Platform | File | Notes |
+          | --- | --- | --- |
+          | macOS 12+ | \`apic_${VERSION}_darwin_universal.dmg\` / \`.zip\` | Universal (Apple silicon + Intel). Ad-hoc signed, not notarised: first launch needs right-click → Open, or \`xattr -dr com.apple.quarantine /Applications/apic.app\`. |
+          | Windows 10+ | \`apic_${VERSION}_windows_amd64.zip\` | Needs the WebView2 runtime (preinstalled on Windows 11, bundled with Edge on 10). |
+          | Linux x86-64 | \`apic_${VERSION}_linux_amd64.tar.gz\` | Needs GTK 3 and WebKitGTK 4.1: \`apt install libgtk-3-0 libwebkit2gtk-4.1-0\`. |
+
+          ## First run
+
+          The window opens the workspace from \`--workspace\`, \`\$APIC_WORKSPACE\`, the
+          nearest ancestor with \`envs.yaml\`, or \`~/.apic\`. The CLI ships separately:
+          \`go install github.com/abcdlsj/apic/cmd/apic@latest\`.
+          EOF
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "apic $GITHUB_REF_NAME" --notes-file NOTES.md
