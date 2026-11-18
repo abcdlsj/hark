@@ -21,9 +21,10 @@ env:
 
 jobs:
   darwin:
-    # macOS 14+ runners are Apple silicon, so one runner can build arm64, amd64
-    # and lipo them into a universal bundle.
-    runs-on: macos-latest
+    # macos-15 is Apple silicon, so one runner can build arm64, amd64 and lipo
+    # them into a universal bundle. macos-latest resolves to a newer image whose
+    # arm64 pool had no capacity; pinning the label keeps the job acquirable.
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
