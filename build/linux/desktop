@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=apic
+Comment=Local-first API workbench
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/apic %u
+Terminal=false
+Type=Application
+Icon=apic
+Categories=Utility;
+StartupWMClass=apic
+
+ 
