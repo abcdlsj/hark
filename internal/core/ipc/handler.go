@@ -69,9 +69,11 @@ func dispatch(o *ops.Ops, req Request) (Response, error) {
 		if err := decode(req.Args, &a); err != nil {
 			return Response{}, err
 		}
+		// Anything arriving on the socket came from the CLI, so it is agent work
+		// even though the desktop process performs the write.
 		res, err := o.Save(ops.SaveParams{
 			ID: a.ID, Name: a.Name, Curl: a.Curl, API: a.API,
-			AutoVar: a.AutoVar, Env: a.Env,
+			AutoVar: a.AutoVar, Env: a.Env, Actor: ops.ActorAgent,
 		})
 		if err != nil {
 			return Response{}, err
@@ -97,6 +99,7 @@ func dispatch(o *ops.Ops, req Request) (Response, error) {
 		}
 		out, err := o.Run(context.Background(), ops.RunParams{
 			ID: a.ID, Curl: a.Curl, Env: a.Env, Overrides: a.Overrides,
+			Actor: ops.ActorAgent,
 		})
 		if err != nil {
 			return Response{}, err

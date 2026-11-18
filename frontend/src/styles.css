@@ -1,0 +1,248 @@
+@import "tailwindcss";
+
+/* Design tokens from the product spec: 95% cool grey, 1px lines, no shadows
+   inside the layout. Only floating layers may carry depth. */
+:root {
+  --apic-canvas: #0b0c0e;
+  --apic-surface: #101216;
+  --apic-elevated: #181b21;
+  --apic-overlay: #161920e6;
+  --apic-line: rgba(255, 255, 255, 0.07);
+  --apic-line-strong: rgba(255, 255, 255, 0.18);
+  --apic-ink: #eceef2;
+  --apic-ink-2: #8a909e;
+  --apic-ink-3: #4e5461;
+  --apic-get: #34d399;
+  --apic-post: #60a5fa;
+  --apic-put: #fbbf24;
+  --apic-patch: #a78bfa;
+  --apic-delete: #f87171;
+  --apic-var: #38bdf8;
+  --apic-var-bg: rgba(56, 189, 248, 0.12);
+  --apic-secret: #c084fc;
+  --apic-secret-bg: rgba(192, 132, 252, 0.12);
+  --apic-undefined: #fbbf24;
+  --apic-diff-add: #34d399;
+  --apic-syn-key: #38bdf8;
+  --apic-syn-string: #9ad7a4;
+  --apic-syn-number: #fbbf24;
+  --apic-syn-literal: #c084fc;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --apic-canvas: #f6f7f9;
+  --apic-surface: #ffffff;
+  --apic-elevated: #eef0f4;
+  --apic-overlay: #ffffffeb;
+  --apic-line: rgba(0, 0, 0, 0.07);
+  --apic-line-strong: rgba(0, 0, 0, 0.22);
+  --apic-ink: #111318;
+  --apic-ink-2: #5e6573;
+  --apic-ink-3: #9ca3af;
+  /* Accents darken just enough to stay legible on white; the palette and its
+     discipline stay the same. */
+  --apic-get: #059669;
+  --apic-post: #2563eb;
+  --apic-put: #b45309;
+  --apic-patch: #7c3aed;
+  --apic-delete: #dc2626;
+  --apic-var: #0284c7;
+  --apic-var-bg: rgba(2, 132, 199, 0.1);
+  --apic-secret: #7e22ce;
+  --apic-secret-bg: rgba(126, 34, 206, 0.1);
+  --apic-undefined: #b45309;
+  --apic-syn-key: #0369a1;
+  --apic-syn-string: #15803d;
+  --apic-syn-number: #b45309;
+  --apic-syn-literal: #7e22ce;
+  color-scheme: light;
+}
+
+@theme {
+  --color-canvas: var(--apic-canvas);
+  --color-surface: var(--apic-surface);
+  --color-elevated: var(--apic-elevated);
+  --color-overlay: var(--apic-overlay);
+  --color-line: var(--apic-line);
+  --color-line-strong: var(--apic-line-strong);
+  --color-ink: var(--apic-ink);
+  --color-ink2: var(--apic-ink-2);
+  --color-ink3: var(--apic-ink-3);
+  --color-get: var(--apic-get);
+  --color-post: var(--apic-post);
+  --color-put: var(--apic-put);
+  --color-patch: var(--apic-patch);
+  --color-del: var(--apic-delete);
+  --color-var: var(--apic-var);
+  --color-var-bg: var(--apic-var-bg);
+  --color-secret: var(--apic-secret);
+  --color-secret-bg: var(--apic-secret-bg);
+  --color-undefined: var(--apic-undefined);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --radius-pill: 3px;
+  --radius-control: 5px;
+  --radius-overlay: 8px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--apic-canvas);
+  color: var(--apic-ink);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  cursor: default;
+  user-select: none;
+}
+
+input,
+textarea {
+  user-select: text;
+}
+
+/* Selection and focus: quiet by design, never a glowing blue ring. */
+::selection {
+  background: rgba(96, 165, 250, 0.22);
+}
+
+*:focus {
+  outline: none;
+}
+
+.scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.scroll::-webkit-scrollbar-thumb {
+  background: var(--apic-line-strong);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 6px;
+}
+.scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overlay {
+  background: var(--apic-overlay);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.34),
+    0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  border: 1px solid var(--apic-line);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.motion {
+  transition:
+    opacity 110ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 110ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 80ms linear,
+    color 80ms linear,
+    border-color 80ms linear;
+}
+
+/* Placeholder pills rendered inside the CodeMirror URL line. */
+.var-pill {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--apic-var);
+  background: var(--apic-var-bg);
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin: 0 1px;
+  white-space: nowrap;
+}
+.var-pill[data-secret="true"] {
+  color: var(--apic-secret);
+  background: var(--apic-secret-bg);
+}
+.var-pill[data-undefined="true"] {
+  color: var(--apic-undefined);
+  background: transparent;
+  border-bottom: 1px dashed var(--apic-undefined);
+  border-radius: 0;
+  padding-bottom: 0;
+}
+
+/* CodeMirror surfaces lose their chrome: no gutter backgrounds, no fold slots. */
+.cm-editor {
+  height: 100%;
+  background: transparent;
+}
+.cm-editor.cm-focused {
+  outline: none !important;
+}
+.cm-scroller {
+  font-family: var(--font-mono) !important;
+  font-size: 12.5px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.cm-gutters {
+  background: transparent !important;
+  border: none !important;
+  color: var(--apic-ink-3) !important;
+  padding-right: 10px;
+}
+.cm-lineNumbers .cm-gutterElement {
+  color: var(--apic-ink-3);
+  font-size: 11.5px;
+}
+.cm-activeLine {
+  background: transparent !important;
+}
+.cm-activeLineGutter {
+  background: transparent !important;
+  color: var(--apic-ink-2) !important;
+}
+.cm-selectionBackground,
+.cm-focused .cm-selectionBackground {
+  background: rgba(96, 165, 250, 0.2) !important;
+}
+.cm-cursor {
+  border-left: 1.5px solid var(--apic-ink) !important;
+}
+.cm-tooltip {
+  border: 1px solid var(--apic-line) !important;
+  background: var(--apic-elevated) !important;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+/* 1px in-flight progress line under the URL bar. */
+@keyframes apic-progress {
+  0% {
+    transform: translateX(-30%);
+  }
+  100% {
+    transform: translateX(130%);
+  }
+}
+.inflight-line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--apic-var), transparent);
+  animation: apic-progress 1.1s linear infinite;
+}

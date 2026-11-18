@@ -15,3 +15,8 @@ bin/
 *.db
 *.db-shm
 *.db-wal
+
+# demo workspace used while developing
+/.apic-demo/
+/desktop
+/apic

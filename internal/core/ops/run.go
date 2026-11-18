@@ -14,9 +14,11 @@ import (
 // AdhocID is the history label for one-off cURL runs.
 const AdhocID = "_adhoc"
 
-// RunParams describes one execution.
+// RunParams describes one execution. API runs an editor buffer that may not be
+// saved yet; its ID is only used as the history label.
 type RunParams struct {
 	ID        string
+	API       *model.API
 	Curl      string
 	Env       string
 	Overrides map[string]string
@@ -36,15 +38,17 @@ func (o *Ops) Run(ctx context.Context, p RunParams) (*RunOutput, error) {
 	apiID := p.ID
 
 	switch {
+	case p.API != nil:
+		req = RequestFromAPI(p.API)
+		if apiID == "" {
+			apiID = AdhocID
+		}
 	case strings.TrimSpace(p.ID) != "":
 		api, err := o.Store.Load(p.ID)
 		if err != nil {
 			return nil, err
 		}
-		req = &curlx.Request{
-			Method: api.Method, URL: api.URL, Query: api.Query,
-			Headers: api.Headers, Body: api.Body, Auth: api.Auth,
-		}
+		req = RequestFromAPI(api)
 	case strings.TrimSpace(p.Curl) != "":
 		parsed, err := curlx.Parse(p.Curl)
 		if err != nil {

@@ -2,6 +2,8 @@ package ipc
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -114,4 +116,35 @@ func mustJSON(v any) json.RawMessage {
 		panic(err)
 	}
 	return raw
+}
+
+// Requests that arrive on the socket are agent work, even though the desktop
+// process performs the write.
+func TestSocketRequestsAreStampedAsAgent(t *testing.T) {
+	root := t.TempDir()
+	o, err := ops.New(root, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer o.Close()
+	o.Actor = ops.ActorHuman
+
+	// Unix socket paths are capped at ~104 bytes, so keep this one short.
+	sock := filepath.Join(os.TempDir(), fmt.Sprintf("apic-test-%d.sock", time.Now().UnixNano()))
+	srv, err := Serve(sock, NewHandler(o))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer srv.Close()
+
+	if _, err := Call(sock, Request{Cmd: CmdSave, Args: mustJSON(SaveArgs{ID: "x/y", Curl: `curl https://x.dev`})}, 5*time.Second); err != nil {
+		t.Fatal(err)
+	}
+	api, err := o.Store.Load("x/y")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if api.Meta.UpdatedBy != ops.ActorAgent {
+		t.Fatalf("updated_by = %q", api.Meta.UpdatedBy)
+	}
 }
