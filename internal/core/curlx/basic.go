@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"strings"
 
-	"github.com/abcdlsj/apic/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/model"
 )
 
 func basicToken(userPass string) string {

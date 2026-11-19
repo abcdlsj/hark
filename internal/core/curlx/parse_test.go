@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/abcdlsj/apic/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/model"
 )
 
 func TestParseBodyImpliesPost(t *testing.T) {

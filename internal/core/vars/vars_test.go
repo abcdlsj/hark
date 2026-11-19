@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/abcdlsj/apic/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/model"
 )
 
 type fakeSecrets map[string]string

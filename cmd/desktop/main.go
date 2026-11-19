@@ -1,14 +1,14 @@
-// Command desktop is the apic window: a Wails v3 shell around internal/core.
+// Command desktop is the hark window: a Wails v3 shell around internal/core.
 //
 // The desktop process is the single writer for the workspace while it runs. It
-// listens on a Unix socket and answers `apic` CLI commands, forwarding each
+// listens on a Unix socket and answers `hark` CLI commands, forwarding each
 // mutation to the webview as an event.
 package main
 
 import (
 	"log"
 
-	"github.com/abcdlsj/apic/frontend"
+	"github.com/abcdlsj/hark/frontend"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -24,7 +24,7 @@ func init() {
 func main() {
 	svc := &AppService{}
 	app := application.New(application.Options{
-		Name:        "apic",
+		Name:        "hark",
 		Description: "Local-first API workbench",
 		Services: []application.Service{
 			application.NewService(svc),
@@ -44,7 +44,7 @@ func main() {
 	defer svc.stop()
 
 	app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:            "apic",
+		Title:            "hark",
 		Width:            1280,
 		Height:           800,
 		MinWidth:         960,

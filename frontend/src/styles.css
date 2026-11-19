@@ -309,7 +309,7 @@ textarea {
 }
 
 /* Animated shimmer line during in-flight execution */
-@keyframes apic-shimmer {
+@keyframes hark-shimmer {
   0% {
     transform: translateX(-45%);
   }
@@ -331,11 +331,11 @@ textarea {
   height: 2px;
   border-radius: 999px;
   background: linear-gradient(90deg, transparent, var(--cobalt), var(--violet), transparent);
-  animation: apic-shimmer 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: hark-shimmer 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 /* Shimmer loading skeleton surface */
-@keyframes apic-skeleton-sheen {
+@keyframes hark-skeleton-sheen {
   0% {
     background-position: 100% 0;
   }
@@ -352,11 +352,11 @@ textarea {
     var(--bg-muted) 90%
   );
   background-size: 220% 100%;
-  animation: apic-skeleton-sheen 1.5s ease-in-out infinite;
+  animation: hark-skeleton-sheen 1.5s ease-in-out infinite;
 }
 
 /* In-flight Gauge tick wave */
-@keyframes apic-tick-pulse {
+@keyframes hark-tick-pulse {
   0%,
   100% {
     opacity: 0.24;
@@ -369,12 +369,12 @@ textarea {
 }
 
 .tick-wave {
-  animation: apic-tick-pulse 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: hark-tick-pulse 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   transform-origin: center bottom;
 }
 
 /* View & panel choreography */
-@keyframes apic-fade-up {
+@keyframes hark-fade-up {
   from {
     opacity: 0;
     transform: translateY(5px);
@@ -386,10 +386,10 @@ textarea {
 }
 
 .anim-fade-up {
-  animation: apic-fade-up 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: hark-fade-up 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes apic-slide-down {
+@keyframes hark-slide-down {
   from {
     opacity: 0;
     transform: translateY(-6px);
@@ -401,10 +401,10 @@ textarea {
 }
 
 .anim-slide-down {
-  animation: apic-slide-down 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: hark-slide-down 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes apic-toast-in {
+@keyframes hark-toast-in {
   from {
     opacity: 0;
     transform: translateY(10px) scale(0.96);
@@ -416,11 +416,11 @@ textarea {
 }
 
 .anim-toast {
-  animation: apic-toast-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: hark-toast-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Radix Dialog, Popover & Dropdown motion */
-@keyframes apic-overlay-in {
+@keyframes hark-overlay-in {
   from {
     opacity: 0;
   }
@@ -429,7 +429,7 @@ textarea {
   }
 }
 
-@keyframes apic-overlay-out {
+@keyframes hark-overlay-out {
   from {
     opacity: 1;
   }
@@ -439,14 +439,14 @@ textarea {
 }
 
 .dialog-overlay[data-state="open"] {
-  animation: apic-overlay-in 150ms ease-out forwards;
+  animation: hark-overlay-in 150ms ease-out forwards;
 }
 
 .dialog-overlay[data-state="closed"] {
-  animation: apic-overlay-out 120ms ease-in forwards;
+  animation: hark-overlay-out 120ms ease-in forwards;
 }
 
-@keyframes apic-dialog-in {
+@keyframes hark-dialog-in {
   from {
     opacity: 0;
     transform: translateX(-50%) translateY(-6px) scale(0.975);
@@ -457,7 +457,7 @@ textarea {
   }
 }
 
-@keyframes apic-dialog-out {
+@keyframes hark-dialog-out {
   from {
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(1);
@@ -469,14 +469,14 @@ textarea {
 }
 
 .dialog-content[data-state="open"] {
-  animation: apic-dialog-in 190ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: hark-dialog-in 190ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .dialog-content[data-state="closed"] {
-  animation: apic-dialog-out 120ms ease-in forwards;
+  animation: hark-dialog-out 120ms ease-in forwards;
 }
 
-@keyframes apic-pop-in {
+@keyframes hark-pop-in {
   from {
     opacity: 0;
     transform: translateY(-3px) scale(0.97);
@@ -487,7 +487,7 @@ textarea {
   }
 }
 
-@keyframes apic-pop-out {
+@keyframes hark-pop-out {
   from {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -499,12 +499,12 @@ textarea {
 }
 
 .floating-pop[data-state="open"] {
-  animation: apic-pop-in 140ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: hark-pop-in 140ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transform-origin: var(--radix-popper-transform-origin, top center);
 }
 
 .floating-pop[data-state="closed"] {
-  animation: apic-pop-out 100ms ease-in forwards;
+  animation: hark-pop-out 100ms ease-in forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

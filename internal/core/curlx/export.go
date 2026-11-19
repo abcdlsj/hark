@@ -3,7 +3,7 @@ package curlx
 import (
 	"strings"
 
-	"github.com/abcdlsj/apic/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/model"
 )
 
 // ExportOptions controls how a Request becomes a cURL command.

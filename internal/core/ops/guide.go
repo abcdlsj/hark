@@ -44,17 +44,17 @@ func (o *Ops) Guide() (string, error) {
 	}
 
 	var b strings.Builder
-	fmt.Fprintf(&b, "# apic — local API workbench\n\n")
+	fmt.Fprintf(&b, "# hark — local API workbench\n\n")
 	fmt.Fprintf(&b, "workspace: %s\n", o.Store.Name())
 	fmt.Fprintf(&b, "env: %s\n", orDash(envs.Current))
 	fmt.Fprintf(&b, "environments: %s\n", orDash(strings.Join(envNames, ", ")))
 	fmt.Fprintf(&b, "variables: %s\n\n", orDash(strings.Join(labels, ", ")))
 	b.WriteString("Commands\n")
-	b.WriteString("  apic ls [--prefix <dir>]                            list APIs\n")
-	b.WriteString("  apic show <api_id> [--curl]                         inspect one API\n")
-	b.WriteString("  apic save <api_id> --stdin [--name <t>] [--auto-var] save a cURL from stdin\n")
-	b.WriteString("  apic run <api_id> | --curl '<cmd>' [-e env] [-v k=v] [--json]\n")
-	b.WriteString("  apic var ls [-e env] | apic var set <k>=<v> [-e env] [--secret]\n\n")
+	b.WriteString("  hark ls [--prefix <dir>]                            list APIs\n")
+	b.WriteString("  hark show <api_id> [--curl]                         inspect one API\n")
+	b.WriteString("  hark save <api_id> --stdin [--name <t>] [--auto-var] save a cURL from stdin\n")
+	b.WriteString("  hark run <api_id> | --curl '<cmd>' [-e env] [-v k=v] [--json]\n")
+	b.WriteString("  hark var ls [-e env] | hark var set <k>=<v> [-e env] [--secret]\n\n")
 	b.WriteString("Rules\n")
 	b.WriteString("  Use {{var}} placeholders instead of literals; saved cURL keeps them.\n")
 	b.WriteString("  Prefer --stdin with a heredoc for cURL: no quoting or escaping issues.\n")

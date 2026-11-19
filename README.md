@@ -1,21 +1,21 @@
-# apic
+# hark
 
 A local-first, quiet API workbench for humans and AI agents.
 
-`apic` does three things and stops there: cURL in, cURL out; `{{placeholder}}`
+`hark` does three things and stops there: cURL in, cURL out; `{{placeholder}}`
 isolation with secrets in the OS keychain; and one shared workspace that both
 you and your agent can drive, from the desktop window or the CLI.
 
 - **Desktop**: Wails v3 + React + Tailwind + CodeMirror 6, frameless, light with
   a dark theme toggle.
-- **CLI**: `apic guide`, `ls`, `show`, `save`, `run`, `var` — the agent entry point.
+- **CLI**: `hark guide`, `ls`, `show`, `save`, `run`, `var` — the agent entry point.
 - **Core**: one Go package tree (`internal/core`) behind both, so ⌘↵ and
-  `apic run` behave identically.
+  `hark run` behave identically.
 
 ## Desktop
 
 ```sh
-task build      # bin/apic.app (macOS), or the platform equivalent
+task build      # bin/hark.app (macOS), or the platform equivalent
 task dev        # Wails dev mode with Vite hot reload
 ```
 
@@ -35,10 +35,10 @@ read-only snapshot banner when you open an agent run.
 ## Install
 
 Prebuilt desktop apps for macOS, Windows and Linux are attached to every
-[release](https://github.com/abcdlsj/apic/releases). The CLI installs with Go:
+[release](https://github.com/abcdlsj/hark/releases). The CLI installs with Go:
 
 ```sh
-go install github.com/abcdlsj/apic/cmd/apic@latest
+go install github.com/abcdlsj/hark/cmd/hark@latest
 ```
 
 ## Workspace
@@ -51,30 +51,34 @@ collections/<module>/<action>.yaml # one API per file; the path is the API ID
 history.db                         # execution log, safe to delete
 ```
 
-Resolution order: `--workspace`, `$APIC_WORKSPACE`, the nearest ancestor
-containing `envs.yaml`, then `~/.apic`.
+Resolution order: `--workspace`, `$HARK_WORKSPACE`, the nearest ancestor
+containing `envs.yaml`, then `~/.hark`.
 
 ## Agent workflow
 
 ```sh
-apic guide                     # what this workspace has, no secret values
-apic save orders/refund --stdin <<'EOF'
+hark guide                     # what this workspace has, no secret values
+hark save orders/refund --stdin <<'EOF'
 curl -X POST '{{base_url}}/v1/orders/refund' \
   -H 'Authorization: Bearer {{api_key}}' \
   -H 'Content-Type: application/json' \
   --data-raw '{"order_id":"ord_9981"}'
 EOF
-apic ls
-apic run orders/refund --json   # 4KB preview + temp file for the full body
+hark ls
+hark run orders/refund --json   # 4KB preview + temp file for the full body
 ```
 
 ## Development
 
 ```sh
 go test ./...
-go run ./cmd/apic guide
+go run ./cmd/hark guide
 task dev        # Wails dev mode (desktop)
 ```
+
+The icon is generated, not hand-drawn: edit `build/icon/generate.mjs`, then
+`node build/icon/generate.mjs && rsvg-convert -w 1024 -h 1024 build/appicon.svg -o build/appicon.png`.
+`task build` turns that PNG into `icons.icns` and `icon.ico`.
 
 Releasing is a tag: `git tag v0.1.0 && git push origin v0.1.0`. The release
 workflow builds macOS (universal), Windows and Linux, stamps the version into

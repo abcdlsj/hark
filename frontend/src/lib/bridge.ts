@@ -1,6 +1,6 @@
 // Single boundary between the React workbench and the Go AppService bindings.
 import { Events } from "@wailsio/runtime";
-import { AppService } from "../../bindings/github.com/abcdlsj/apic/cmd/desktop";
+import { AppService } from "../../bindings/github.com/abcdlsj/hark/cmd/desktop";
 import type { Api, Bootstrap, Log, ParseOut, RunRequest, RunView, SaveOut, VarItem } from "./types";
 
 export const api = {

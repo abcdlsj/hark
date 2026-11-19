@@ -1,13 +1,13 @@
 [Desktop Entry]
 Version=1.0
-Name=apic
+Name=hark
 Comment=Local-first API workbench
 # The Exec line includes %u to pass the URL to the application
-Exec=/usr/local/bin/apic %u
+Exec=/usr/local/bin/hark %u
 Terminal=false
 Type=Application
-Icon=apic
+Icon=hark
 Categories=Utility;
-StartupWMClass=apic
+StartupWMClass=hark
 
  

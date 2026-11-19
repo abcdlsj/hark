@@ -21,7 +21,7 @@ type Store struct {
 func New(workspaceRoot string) *Store {
 	return &Store{
 		workspace: filepath.Base(workspaceRoot),
-		service:   "apic",
+		service:   "hark",
 	}
 }
 

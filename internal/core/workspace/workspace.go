@@ -7,20 +7,20 @@ import (
 	"path/filepath"
 )
 
-// Marker is the file that identifies a directory as an apic workspace.
+// Marker is the file that identifies a directory as an hark workspace.
 const Marker = "envs.yaml"
 
 // Resolve returns the workspace root. Precedence:
 //
 //  1. explicit path
-//  2. $APIC_WORKSPACE
+//  2. $HARK_WORKSPACE
 //  3. the nearest ancestor of the current directory containing envs.yaml
-//  4. <home>/.apic
+//  4. <home>/.hark
 func Resolve(explicit string) (string, error) {
 	if explicit != "" {
 		return absExpand(explicit)
 	}
-	if env := os.Getenv("APIC_WORKSPACE"); env != "" {
+	if env := os.Getenv("HARK_WORKSPACE"); env != "" {
 		return absExpand(env)
 	}
 	if cwd, err := os.Getwd(); err == nil {
@@ -37,7 +37,7 @@ func Resolve(explicit string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".apic"), nil
+	return filepath.Join(home, ".hark"), nil
 }
 
 // ConfigDir is where per-machine, non-synced state lives (IPC socket, recent
@@ -47,7 +47,7 @@ func ConfigDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(dir, "apic"), nil
+	return filepath.Join(dir, "hark"), nil
 }
 
 func absExpand(p string) (string, error) {

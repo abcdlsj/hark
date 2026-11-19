@@ -10,15 +10,15 @@ build/ios/xcode/overlay.json
 build/ios/xcode/gen/
 build/android/overlay.json
 build/android/gen/
-# apic local
+# hark local
 bin/
-.apic/
+.hark/
 *.db
 *.db-shm
 *.db-wal
 
 # demo workspace used while developing
-/.apic-demo/
+/.hark-demo/
 /desktop
-/apic
+/hark
 

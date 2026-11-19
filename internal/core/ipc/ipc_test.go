@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/abcdlsj/apic/internal/core/ops"
+	"github.com/abcdlsj/hark/internal/core/ops"
 )
 
 func TestServeCallAndOffline(t *testing.T) {
@@ -36,7 +36,7 @@ func TestServeCallAndOffline(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resp.Error != "" || !strings.Contains(resp.Text, "apic run") {
+	if resp.Error != "" || !strings.Contains(resp.Text, "hark run") {
 		t.Fatalf("guide response = %#v", resp)
 	}
 
@@ -130,7 +130,7 @@ func TestSocketRequestsAreStampedAsAgent(t *testing.T) {
 	o.Actor = ops.ActorHuman
 
 	// Unix socket paths are capped at ~104 bytes, so keep this one short.
-	sock := filepath.Join(os.TempDir(), fmt.Sprintf("apic-test-%d.sock", time.Now().UnixNano()))
+	sock := filepath.Join(os.TempDir(), fmt.Sprintf("hark-test-%d.sock", time.Now().UnixNano()))
 	srv, err := Serve(sock, NewHandler(o))
 	if err != nil {
 		t.Fatal(err)

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/abcdlsj/apic/internal/core/ops"
+	"github.com/abcdlsj/hark/internal/core/ops"
 )
 
 // Handler builds the command dispatcher shared by the desktop socket server and
@@ -84,7 +84,7 @@ func dispatch(o *ops.Ops, req Request) (Response, error) {
 			fmt.Fprintf(&b, "auto-var: %s\n", strings.Join(res.Replaced, ", "))
 		}
 		if res.NewToken != "" {
-			fmt.Fprintf(&b, "warning: plaintext bearer token; run `apic var set api_key=<token> --secret` then use {{api_key}}\n")
+			fmt.Fprintf(&b, "warning: plaintext bearer token; run `hark var set api_key=<token> --secret` then use {{api_key}}\n")
 		}
 		for _, n := range res.Notes {
 			fmt.Fprintf(&b, "note: %s\n", n)
@@ -198,7 +198,7 @@ func spillBody(apiID string, body []byte) string {
 	if name == "" || name == "_adhoc" {
 		name = "response"
 	}
-	path := filepath.Join(os.TempDir(), fmt.Sprintf("apic-%s-%d.body", name, time.Now().UnixNano()))
+	path := filepath.Join(os.TempDir(), fmt.Sprintf("hark-%s-%d.body", name, time.Now().UnixNano()))
 	if err := os.WriteFile(path, body, 0o600); err != nil {
 		return ""
 	}

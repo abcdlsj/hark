@@ -1,5 +1,5 @@
 // Package ops is the semantic layer shared by the CLI and the desktop app.
-// Every mutation and every request goes through here, so `apic run` in a
+// Every mutation and every request goes through here, so `hark run` in a
 // terminal and ⌘↵ in the desktop window behave identically.
 package ops
 
@@ -8,13 +8,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/abcdlsj/apic/internal/core/curlx"
-	"github.com/abcdlsj/apic/internal/core/exec"
-	"github.com/abcdlsj/apic/internal/core/history"
-	"github.com/abcdlsj/apic/internal/core/model"
-	"github.com/abcdlsj/apic/internal/core/secret"
-	"github.com/abcdlsj/apic/internal/core/store"
-	"github.com/abcdlsj/apic/internal/core/vars"
+	"github.com/abcdlsj/hark/internal/core/curlx"
+	"github.com/abcdlsj/hark/internal/core/exec"
+	"github.com/abcdlsj/hark/internal/core/history"
+	"github.com/abcdlsj/hark/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/secret"
+	"github.com/abcdlsj/hark/internal/core/store"
+	"github.com/abcdlsj/hark/internal/core/vars"
 )
 
 // Event names pushed to the desktop frontend.

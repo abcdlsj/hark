@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/abcdlsj/apic/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/model"
 )
 
 func newOps(t *testing.T) *Ops {
@@ -33,7 +33,7 @@ func TestGuideListsEnvironmentsAndKeysWithoutValues(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"apic run", "apic save", "base_url", "api_key"} {
+	for _, want := range []string{"hark run", "hark save", "base_url", "api_key"} {
 		if !strings.Contains(guide, want) {
 			t.Fatalf("guide missing %q:\n%s", want, guide)
 		}

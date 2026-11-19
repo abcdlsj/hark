@@ -1,4 +1,4 @@
-// Command apic is the agent-facing CLI for the apic API workbench.
+// Command hark is the agent-facing CLI for the hark API workbench.
 //
 // Every command forwards to a running desktop app when one answers on the IPC
 // socket, so the desktop stays the single writer for the workspace. Otherwise it
@@ -11,9 +11,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/abcdlsj/apic/internal/core/ipc"
-	"github.com/abcdlsj/apic/internal/core/ops"
-	"github.com/abcdlsj/apic/internal/core/workspace"
+	"github.com/abcdlsj/hark/internal/core/ipc"
+	"github.com/abcdlsj/hark/internal/core/ops"
+	"github.com/abcdlsj/hark/internal/core/workspace"
 	"github.com/spf13/cobra"
 )
 
@@ -24,12 +24,12 @@ var (
 
 func main() {
 	root := &cobra.Command{
-		Use:           "apic",
+		Use:           "hark",
 		Short:         "Local-first API workbench for humans and agents",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
-	root.PersistentFlags().StringVar(&flagWorkspace, "workspace", "", "workspace directory (default: $APIC_WORKSPACE, nearest envs.yaml, or ~/.apic)")
+	root.PersistentFlags().StringVar(&flagWorkspace, "workspace", "", "workspace directory (default: $HARK_WORKSPACE, nearest envs.yaml, or ~/.hark)")
 	root.PersistentFlags().BoolVar(&flagJSON, "json", false, "machine-readable output")
 
 	root.AddCommand(

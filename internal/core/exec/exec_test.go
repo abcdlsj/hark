@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/abcdlsj/apic/internal/core/curlx"
-	"github.com/abcdlsj/apic/internal/core/model"
-	"github.com/abcdlsj/apic/internal/core/vars"
+	"github.com/abcdlsj/hark/internal/core/curlx"
+	"github.com/abcdlsj/hark/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/vars"
 )
 
 type fakeSecrets map[string]string

@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/abcdlsj/apic/internal/core/vars"
+	"github.com/abcdlsj/hark/internal/core/vars"
 )
 
 func basicAuth(user, pass string) string {

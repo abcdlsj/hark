@@ -8,13 +8,13 @@
         AllowPromptForPassword="false">
     </Settings>
     <Installer
-        Path="apic"
+        Path="hark"
         Arguments=""
-        InstallLocation="C:\Program Files\abcdlsj\apic">
+        InstallLocation="C:\Program Files\abcdlsj\hark">
     </Installer>
     <PackageInformation
-        PackageName="apic"
-        PackageDisplayName="apic"
+        PackageName="hark"
+        PackageDisplayName="hark"
         PublisherName="CN=abcdlsj"
         PublisherDisplayName="abcdlsj"
         Version="0.1.0.0"
@@ -25,10 +25,10 @@
         </Capabilities>
         <Applications>
             <Application
-                Id="com.abcdlsj.apic"
+                Id="com.abcdlsj.hark"
                 Description="Local-first API workbench"
-                DisplayName="apic"
-                ExecutableName="apic"
+                DisplayName="hark"
+                ExecutableName="hark"
                 EntryPoint="Windows.FullTrustApplication">
                 
             </Application>
@@ -41,13 +41,13 @@
         </Dependencies>
         <Properties>
             <Framework>false</Framework>
-            <DisplayName>apic</DisplayName>
+            <DisplayName>hark</DisplayName>
             <PublisherDisplayName>abcdlsj</PublisherDisplayName>
             <Description>Local-first API workbench</Description>
             <Logo>Assets\AppIcon.png</Logo>
         </Properties>
     </PackageInformation>
-    <SaveLocation PackagePath="apic.msix" />
+    <SaveLocation PackagePath="hark.msix" />
     <PackageIntegrity>
         <CertificatePath></CertificatePath>
     </PackageIntegrity>

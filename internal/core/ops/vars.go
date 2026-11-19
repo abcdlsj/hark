@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/abcdlsj/apic/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/model"
 )
 
 // VarItem is one placeholder as shown to a human or an agent. Secret values

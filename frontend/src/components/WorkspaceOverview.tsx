@@ -53,7 +53,7 @@ export function WorkspaceOverview() {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5">
               <h1 className="truncate text-[22px] font-bold tracking-[-0.025em] text-ink">
-                {workspace || "apic workspace"}
+                {workspace || "hark workspace"}
               </h1>
               <EnvCapsule env={env} size="sm" />
             </div>
@@ -167,7 +167,7 @@ export function WorkspaceOverview() {
                   Save requests from the UI or drive this workspace from your terminal or coding agent:
                 </p>
                 <pre className="overflow-x-auto rounded-[8px] bg-subtle p-2.5 mono text-[11px] leading-relaxed text-ink">
-                  {`apic save orders/refund --stdin <<'EOF'\ncurl -X POST '{{base_url}}/v1/orders/refund' \\\n  -H 'Authorization: Bearer {{api_key}}'\nEOF`}
+                  {`hark save orders/refund --stdin <<'EOF'\ncurl -X POST '{{base_url}}/v1/orders/refund' \\\n  -H 'Authorization: Bearer {{api_key}}'\nEOF`}
                 </pre>
               </div>
             ) : (
@@ -212,7 +212,7 @@ export function WorkspaceOverview() {
                 <OverviewCardBlueprint kind="activity" />
                 <span className="font-medium text-ink">No requests executed yet.</span>
                 <span className="mt-1 text-[11.5px] text-ink3">
-                  Runs from both the desktop window and <span className="mono">apic run</span> stream here live.
+                  Runs from both the desktop window and <span className="mono">hark run</span> stream here live.
                 </span>
               </div>
             ) : (
@@ -256,8 +256,8 @@ export function WorkspaceOverview() {
             <div className="min-w-0">
               <div className="text-[12.5px] font-semibold text-ink">Shared Workspace for AI Agents & CLI</div>
               <div className="truncate text-[11.5px] text-ink3">
-                Let coding agents inspect endpoints and run requests via <span className="mono text-ink2">apic guide</span>,{" "}
-                <span className="mono text-ink2">apic ls</span>, and <span className="mono text-ink2">apic run</span>.
+                Let coding agents inspect endpoints and run requests via <span className="mono text-ink2">hark guide</span>,{" "}
+                <span className="mono text-ink2">hark ls</span>, and <span className="mono text-ink2">hark run</span>.
               </div>
             </div>
           </div>

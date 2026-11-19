@@ -19,9 +19,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/abcdlsj/apic/internal/core/curlx"
-	"github.com/abcdlsj/apic/internal/core/model"
-	"github.com/abcdlsj/apic/internal/core/vars"
+	"github.com/abcdlsj/hark/internal/core/curlx"
+	"github.com/abcdlsj/hark/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/vars"
 )
 
 // MaxBody caps how much of a response body is kept in memory.

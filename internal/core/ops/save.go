@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/abcdlsj/apic/internal/core/curlx"
-	"github.com/abcdlsj/apic/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/curlx"
+	"github.com/abcdlsj/hark/internal/core/model"
 )
 
 // SaveParams describes a save request. Either API or Curl is set; Curl is what

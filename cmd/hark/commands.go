@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/abcdlsj/apic/internal/core/ipc"
+	"github.com/abcdlsj/hark/internal/core/ipc"
 	"github.com/spf13/cobra"
 )
 

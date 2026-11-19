@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/abcdlsj/apic/internal/core/model"
-	"github.com/abcdlsj/apic/internal/core/workspace"
+	"github.com/abcdlsj/hark/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/workspace"
 )
 
 // Command names.
@@ -114,7 +114,7 @@ func Serve(path string, handler Handler) (*Server, error) {
 		// Someone may still own it; only remove when nobody answers.
 		if conn, err := net.DialTimeout("unix", path, ProbeTimeout); err == nil {
 			conn.Close()
-			return nil, fmt.Errorf("another apic instance is already listening on %s", path)
+			return nil, fmt.Errorf("another hark instance is already listening on %s", path)
 		}
 		_ = os.Remove(path)
 	}

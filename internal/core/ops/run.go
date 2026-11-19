@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/abcdlsj/apic/internal/core/curlx"
-	"github.com/abcdlsj/apic/internal/core/exec"
-	"github.com/abcdlsj/apic/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/curlx"
+	"github.com/abcdlsj/hark/internal/core/exec"
+	"github.com/abcdlsj/hark/internal/core/model"
 )
 
 // AdhocID is the history label for one-off cURL runs.

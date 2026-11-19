@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/abcdlsj/apic/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/model"
 	"gopkg.in/yaml.v3"
 )
 

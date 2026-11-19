@@ -8,13 +8,13 @@
   IgnorableNamespaces="uap3">
   
   <Identity 
-    Name="com.abcdlsj.apic"
+    Name="com.abcdlsj.hark"
     Publisher="CN=abcdlsj"
     Version="0.1.0.0" 
     ProcessorArchitecture="arm64" />
   
   <Properties>
-    <DisplayName>apic</DisplayName>
+    <DisplayName>hark</DisplayName>
     <PublisherDisplayName>abcdlsj</PublisherDisplayName>
     <Description>Local-first API workbench</Description>
     <Logo>Assets\StoreLogo.png</Logo>
@@ -29,9 +29,9 @@
   </Resources>
   
   <Applications>
-    <Application Id="com.abcdlsj.apic" Executable="apic" EntryPoint="Windows.FullTrustApplication">
+    <Application Id="com.abcdlsj.hark" Executable="hark" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="apic"
+        DisplayName="hark"
         Description="Local-first API workbench"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
@@ -41,7 +41,7 @@
       </uap:VisualElements>
       
       <Extensions>
-        <desktop:Extension Category="windows.fullTrustProcess" Executable="apic" />
+        <desktop:Extension Category="windows.fullTrustProcess" Executable="hark" />
         
         
       </Extensions>

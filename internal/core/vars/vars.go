@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/abcdlsj/apic/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/model"
 )
 
 // SecretStore reads secret values from the OS keychain.

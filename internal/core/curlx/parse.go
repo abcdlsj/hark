@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/abcdlsj/apic/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/model"
 )
 
 // Request is the structured form of one HTTP call.

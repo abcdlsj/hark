@@ -6,11 +6,11 @@ version: '3'
 # This information is used to generate the build assets.
 info:
   companyName: "abcdlsj" # The name of the company
-  productName: "apic" # The name of the application
-  productIdentifier: "com.abcdlsj.apic" # The unique product identifier
+  productName: "hark" # The name of the application
+  productIdentifier: "com.abcdlsj.hark" # The unique product identifier
   description: "Local-first API workbench for humans and agents" # The application description
   copyright: "(c) 2026, abcdlsj" # Copyright text
-  comments: "https://github.com/abcdlsj/apic" # Comments
+  comments: "https://github.com/abcdlsj/hark" # Comments
   version: "0.1.0" # The application version
   # cfBundleIconName: "appicon" # The macOS icon name in Assets.car icon bundles (optional)
   #                               # Should match the name of your .icon file without the extension
@@ -28,7 +28,7 @@ info:
 #   # The company/organisation name for templates and project settings
 #   company: "My Company"
 #   # Additional comments to embed in Info.plist metadata
-#   comments: "https://github.com/abcdlsj/apic"
+#   comments: "https://github.com/abcdlsj/hark"
 
 # Dev mode configuration
 dev_mode:

@@ -15,7 +15,7 @@ const PLACEHOLDER_TEXT = "placeholder so `go build ./...` works before the front
  */
 function keepDistPlaceholder(): Plugin {
   return {
-    name: "apic:keep-dist-placeholder",
+    name: "hark:keep-dist-placeholder",
     apply: "build",
     closeBundle() {
       writeFileSync(PLACEHOLDER, PLACEHOLDER_TEXT);

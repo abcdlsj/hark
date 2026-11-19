@@ -17,7 +17,7 @@ export interface ToastItem {
 
 const stored = <T,>(key: string, fallback: T): T => {
   try {
-    const raw = localStorage.getItem(`apic.v2:${key}`);
+    const raw = localStorage.getItem(`hark.v2:${key}`);
     return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
     return fallback;
@@ -26,7 +26,7 @@ const stored = <T,>(key: string, fallback: T): T => {
 
 const persist = (key: string, value: unknown): void => {
   try {
-    localStorage.setItem(`apic.v2:${key}`, JSON.stringify(value));
+    localStorage.setItem(`hark.v2:${key}`, JSON.stringify(value));
   } catch {
     /* storage may be unavailable in restricted webviews */
   }

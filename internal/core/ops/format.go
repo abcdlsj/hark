@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/abcdlsj/apic/internal/core/exec"
-	"github.com/abcdlsj/apic/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/exec"
+	"github.com/abcdlsj/hark/internal/core/model"
 )
 
 // FormatList renders list rows one per line, token-frugal by design:
@@ -87,7 +87,7 @@ func RunSummary(res *exec.Result) string {
 	return b.String()
 }
 
-// RunJSON is the structured form printed by `apic run --json`. The body is
+// RunJSON is the structured form printed by `hark run --json`. The body is
 // capped so a large response cannot flood an agent's context.
 func RunJSON(res *exec.Result, fullBodyPath string, truncated bool) ([]byte, error) {
 	const previewLimit = 4 << 10

@@ -10,13 +10,13 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/abcdlsj/apic/internal/core/curlx"
-	"github.com/abcdlsj/apic/internal/core/exec"
-	"github.com/abcdlsj/apic/internal/core/history"
-	"github.com/abcdlsj/apic/internal/core/ipc"
-	"github.com/abcdlsj/apic/internal/core/model"
-	"github.com/abcdlsj/apic/internal/core/ops"
-	"github.com/abcdlsj/apic/internal/core/workspace"
+	"github.com/abcdlsj/hark/internal/core/curlx"
+	"github.com/abcdlsj/hark/internal/core/exec"
+	"github.com/abcdlsj/hark/internal/core/history"
+	"github.com/abcdlsj/hark/internal/core/ipc"
+	"github.com/abcdlsj/hark/internal/core/model"
+	"github.com/abcdlsj/hark/internal/core/ops"
+	"github.com/abcdlsj/hark/internal/core/workspace"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -458,7 +458,7 @@ func (s *AppService) PickWorkspace() (Bootstrap, error) {
 	dir, err := s.app.Dialog.OpenFile().
 		CanChooseDirectories(true).
 		CanChooseFiles(false).
-		SetTitle("Choose an apic workspace").
+		SetTitle("Choose an hark workspace").
 		PromptForSingleSelection()
 	if err != nil || dir == "" {
 		return Bootstrap{}, err
