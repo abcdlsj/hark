@@ -29,6 +29,15 @@ export const humanBytes = (bytes: number): string => {
   return `${num} ${unit}`;
 };
 
+/** Directory name of the built-in workspace (~/.hark). */
+const DEFAULT_WORKSPACE_DIR = ".hark";
+
+/** The home workspace has no name of its own: it reads as "inbox". */
+export const isDefaultWorkspace = (name: string): boolean =>
+  name === "" || name === DEFAULT_WORKSPACE_DIR;
+
+export const workspaceLabel = (name: string): string => (isDefaultWorkspace(name) ? "inbox" : name);
+
 export const clockTime = (iso: string): string => {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "--:--:--";

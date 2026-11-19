@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { api } from "../lib/bridge";
-import { isMac } from "../lib/format";
+import { isMac, workspaceLabel } from "../lib/format";
 import { useStore } from "../store";
 import { cx, EnvCapsule, IconButton, Kbd, Tip } from "./Primitives";
 
@@ -98,7 +98,7 @@ export function TopBar() {
             >
               <BrandMark />
               <span className="truncate text-[13px] font-semibold tracking-[-0.015em] text-ink">
-                {workspace || "workspace"}
+                {workspaceLabel(workspace)}
               </span>
               <ChevronDown className="h-3.5 w-3.5 shrink-0 text-ink3" strokeWidth={2} />
             </button>
