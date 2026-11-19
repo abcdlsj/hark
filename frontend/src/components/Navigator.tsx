@@ -5,7 +5,7 @@ import { relativeTime, splitDuration, statusMeta } from "../lib/format";
 import type { ListItem, Log } from "../lib/types";
 import { useStore } from "../store";
 import { ActorTag, cx, EnvCapsule, IconButton, MethodBadge, MetricDisplay, SegmentedTabs, Tip } from "./Primitives";
-import { NavigatorEmptyBlueprint, Spinner } from "./VisualStates";
+import { NavigatorEmptyState, Spinner } from "./VisualStates";
 
 interface Group {
   name: string;
@@ -140,7 +140,7 @@ export function Navigator() {
       <div className="scroll min-h-0 flex-1 overflow-y-auto px-2 py-2">
         {sidebarTab === "endpoints" ? (
           groups.length === 0 ? (
-            <NavigatorEmptyBlueprint
+            <NavigatorEmptyState
               mode="endpoints"
               filtered={Boolean(query)}
               onNew={newDraft}
@@ -289,7 +289,7 @@ export function Navigator() {
             </div>
           )
         ) : filteredHistory.length === 0 ? (
-          <NavigatorEmptyBlueprint
+          <NavigatorEmptyState
             mode="activity"
             filtered={Boolean(query)}
             onNew={newDraft}

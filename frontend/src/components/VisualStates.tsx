@@ -1,5 +1,5 @@
-import { ArrowRight, Loader2, Plus, SearchX, Square } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Activity, ArrowRight, Braces, FileBraces, Loader2, Plus, Radar, SearchX, Square } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { splitDuration } from "../lib/format";
 import { Button, cx, Kbd, MetricDisplay } from "./Primitives";
 
@@ -207,53 +207,37 @@ export function InspectorLoadingState({
   );
 }
 
-/** Architectural wireframe empty state for ResponseInspector. */
-export function InspectorEmptyBlueprint() {
+/** Shared empty-state mark: a quiet icon tile. Skeletons are for loading only. */
+function EmptyMark({
+  icon,
+  tone = "muted",
+}: {
+  icon: ReactNode;
+  tone?: "cobalt" | "violet" | "amber" | "muted";
+}) {
+  const tones = {
+    cobalt: "bg-cobalt-soft text-cobalt",
+    violet: "bg-violet-soft text-violet",
+    amber: "bg-amber-soft text-amber",
+    muted: "bg-subtle text-ink3",
+  };
+  return (
+    <div
+      className={cx(
+        "mb-3 flex h-10 w-10 items-center justify-center rounded-[11px] border border-line",
+        tones[tone],
+      )}
+    >
+      {icon}
+    </div>
+  );
+}
+
+/** Response inspector with nothing to show yet. */
+export function InspectorEmptyState() {
   return (
     <div className="scroll anim-fade-up flex h-full flex-col items-center justify-center overflow-y-auto p-5 text-center">
-      {/* Schematic Response Card Wireframe */}
-      <div className="relative mb-5">
-        <div className="pointer-events-none absolute -inset-6 rounded-full bg-gradient-to-tr from-cobalt/10 via-violet/8 to-emerald/10 blur-xl" />
-        <div className="relative w-[256px] rounded-[13px] border border-line bg-subtle/80 p-3.5 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-soft px-2 py-0.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald" />
-              <span className="h-2 w-7 rounded-full bg-emerald/45" />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="h-2.5 w-8 rounded-[3px] bg-line-strong/70" />
-              <span className="h-2.5 w-7 rounded-[3px] bg-line-strong/50" />
-            </div>
-          </div>
-
-          {/* Schematic Gauge Bar */}
-          <div className="mt-2.5 flex items-center gap-[2.5px]">
-            {Array.from({ length: 18 }).map((_, idx) => (
-              <span
-                key={idx}
-                className={cx(
-                  "h-[7px] flex-1 rounded-[2px]",
-                  idx < 4 ? "bg-cobalt/35" : idx < 14 ? "bg-emerald/40" : "bg-tick-track",
-                )}
-              />
-            ))}
-          </div>
-
-          {/* Schematic JSON Payload Lines */}
-          <div className="mt-3 space-y-1.5 rounded-[8px] border border-line/70 bg-surface/80 p-2.5 text-left">
-            <div className="mono text-[10px] leading-none text-ink3">{"{"}</div>
-            <div className="flex items-center gap-1.5 pl-2.5">
-              <span className="h-2 w-10 rounded-[3px] bg-sky/40" />
-              <span className="h-2 w-20 rounded-[3px] bg-emerald/35" />
-            </div>
-            <div className="flex items-center gap-1.5 pl-2.5">
-              <span className="h-2 w-14 rounded-[3px] bg-sky/35" />
-              <span className="h-2 w-12 rounded-[3px] bg-amber/35" />
-            </div>
-            <div className="mono text-[10px] leading-none text-ink3">{"}"}</div>
-          </div>
-        </div>
-      </div>
+      <EmptyMark icon={<Radar className="h-4.5 w-4.5" strokeWidth={1.8} />} tone="cobalt" />
 
       <div className="text-[13.5px] font-semibold tracking-tight text-ink">Ready to inspect</div>
       <p className="mt-1 max-w-[290px] text-[12px] leading-relaxed text-ink3">
@@ -275,8 +259,8 @@ export function InspectorEmptyBlueprint() {
   );
 }
 
-/** Architectural wireframe empty state for RequestWorkbench Body: None tab. */
-export function BodyNoneBlueprint({
+/** Request body tab set to None. */
+export function BodyNoneState({
   onSelectJson,
   onSelectForm,
 }: {
@@ -285,23 +269,7 @@ export function BodyNoneBlueprint({
 }) {
   return (
     <div className="scroll anim-fade-up flex h-full flex-col items-center justify-center overflow-y-auto p-4 text-center">
-      <div className="mb-3 w-[196px] rounded-[12px] border border-dashed border-line-strong bg-subtle/50 p-2.5">
-        <div className="flex items-center justify-between text-ink3">
-          <span className="mono text-[12px] font-semibold">{"{"}</span>
-          <span className="h-1.5 w-16 rounded-full bg-tick-track" />
-          <span className="mono text-[12px] font-semibold">{"}"}</span>
-        </div>
-        <div className="mt-2 space-y-1.5 px-2">
-          <div className="flex items-center gap-1.5">
-            <span className="h-2 w-12 rounded-[3px] bg-cobalt/30" />
-            <span className="h-2 flex-1 rounded-[3px] bg-tick-track" />
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="h-2 w-9 rounded-[3px] bg-violet/30" />
-            <span className="h-2 w-16 rounded-[3px] bg-tick-track" />
-          </div>
-        </div>
-      </div>
+      <EmptyMark icon={<Braces className="h-4.5 w-4.5" strokeWidth={1.8} />} tone="violet" />
 
       <div className="text-[13px] font-semibold text-ink">No payload attached</div>
       <p className="mt-1 max-w-[260px] text-[11.5px] leading-relaxed text-ink3">
@@ -321,8 +289,8 @@ export function BodyNoneBlueprint({
   );
 }
 
-/** Schematic empty state for Navigator Endpoints & Activity tabs. */
-export function NavigatorEmptyBlueprint({
+/** Navigator Endpoints & Activity tabs with no rows to show. */
+export function NavigatorEmptyState({
   mode,
   filtered,
   onNew,
@@ -333,45 +301,15 @@ export function NavigatorEmptyBlueprint({
   onNew: () => void;
   onClearFilter: () => void;
 }) {
+  const mark = filtered
+    ? { icon: <SearchX className="h-4.5 w-4.5" strokeWidth={1.8} />, tone: "muted" as const }
+    : mode === "endpoints"
+      ? { icon: <FileBraces className="h-4.5 w-4.5" strokeWidth={1.8} />, tone: "cobalt" as const }
+      : { icon: <Activity className="h-4.5 w-4.5" strokeWidth={1.8} />, tone: "violet" as const };
+
   return (
     <div className="anim-fade-up flex flex-col items-center px-3 py-8 text-center">
-      {filtered ? (
-        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[11px] border border-line bg-subtle text-ink3">
-          <SearchX className="h-4.5 w-4.5" strokeWidth={1.8} />
-        </div>
-      ) : (
-        <div className="mb-3.5 w-[184px] space-y-1.5 rounded-[11px] border border-dashed border-line-strong bg-subtle/45 p-2.5">
-          {mode === "endpoints" ? (
-            <>
-              <div className="flex items-center gap-2">
-                <span className="h-3.5 w-8 rounded-[4px] bg-emerald-soft" />
-                <span className="h-2.5 flex-1 rounded-[3px] bg-tick-track" />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="h-3.5 w-8 rounded-[4px] bg-cobalt-soft" />
-                <span className="h-2.5 w-20 rounded-[3px] bg-tick-track" />
-              </div>
-              <div className="flex items-center gap-2 opacity-60">
-                <span className="h-3.5 w-8 rounded-[4px] bg-violet-soft" />
-                <span className="h-2.5 w-16 rounded-[3px] bg-tick-track" />
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center justify-between gap-2">
-                <span className="h-3 w-10 rounded-full bg-violet-soft" />
-                <span className="h-2.5 w-16 rounded-[3px] bg-tick-track" />
-                <span className="h-2.5 w-7 rounded-[3px] bg-emerald/35" />
-              </div>
-              <div className="flex items-center justify-between gap-2 opacity-65">
-                <span className="h-3 w-10 rounded-full bg-muted" />
-                <span className="h-2.5 w-14 rounded-[3px] bg-tick-track" />
-                <span className="h-2.5 w-7 rounded-[3px] bg-cobalt/35" />
-              </div>
-            </>
-          )}
-        </div>
-      )}
+      <EmptyMark icon={mark.icon} tone={mark.tone} />
 
       <div className="text-[12.5px] font-semibold text-ink">
         {filtered
@@ -398,41 +336,6 @@ export function NavigatorEmptyBlueprint({
           <span>New Request</span>
         </Button>
       ) : null}
-    </div>
-  );
-}
-
-/** Compact schematic wireframe for empty WorkspaceOverview list cards. */
-export function OverviewCardBlueprint({ kind }: { kind: "endpoints" | "activity" }) {
-  return (
-    <div className="mb-3 space-y-2 rounded-[9px] border border-line/80 bg-subtle/60 p-2.5">
-      {kind === "endpoints" ? (
-        <>
-          <div className="flex items-center gap-2">
-            <span className="h-4 w-9 rounded-[4px] bg-cobalt-soft" />
-            <span className="h-2.5 w-28 rounded-[3px] bg-tick-track" />
-            <span className="ml-auto h-2.5 w-8 rounded-[3px] bg-emerald/35" />
-          </div>
-          <div className="flex items-center gap-2 opacity-65">
-            <span className="h-4 w-9 rounded-[4px] bg-emerald-soft" />
-            <span className="h-2.5 w-24 rounded-[3px] bg-tick-track" />
-            <span className="ml-auto h-2.5 w-8 rounded-[3px] bg-tick-track" />
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="flex items-center gap-2">
-            <span className="h-3.5 w-11 rounded-full bg-violet-soft" />
-            <span className="h-2.5 w-24 rounded-[3px] bg-tick-track" />
-            <span className="ml-auto h-2.5 w-12 rounded-[3px] bg-emerald/35" />
-          </div>
-          <div className="flex items-center gap-2 opacity-65">
-            <span className="h-3.5 w-11 rounded-full bg-muted" />
-            <span className="h-2.5 w-20 rounded-[3px] bg-tick-track" />
-            <span className="ml-auto h-2.5 w-10 rounded-[3px] bg-tick-track" />
-          </div>
-        </>
-      )}
     </div>
   );
 }

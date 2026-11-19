@@ -16,7 +16,7 @@ import {
   StatusCapsule,
   SwapText,
 } from "./Primitives";
-import { InspectorEmptyBlueprint, InspectorLoadingState } from "./VisualStates";
+import { InspectorEmptyState, InspectorLoadingState } from "./VisualStates";
 
 interface PhaseSpec {
   key: keyof Timings;
@@ -211,7 +211,7 @@ export function ResponseInspector() {
       {/* Response Content */}
       <div key={view ? `${view.log_id}:${inspectorTab}` : "empty"} className="anim-fade-up min-h-0 flex-1">
         {!view ? (
-          <InspectorEmptyBlueprint />
+          <InspectorEmptyState />
         ) : inspectorTab === "headers" ? (
           <HeadersView view={view} />
         ) : inspectorTab === "raw" ? (

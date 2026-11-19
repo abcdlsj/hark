@@ -24,7 +24,7 @@ import { KVTable } from "./KVTable";
 import { OmniUrlBar } from "./OmniUrlBar";
 import { ActorTag, Button, cx, IconButton, Kbd, SegmentedTabs, SwapText, Tip } from "./Primitives";
 import { VarField } from "./VarField";
-import { BodyNoneBlueprint, Spinner } from "./VisualStates";
+import { BodyNoneState, Spinner } from "./VisualStates";
 
 const BODY_TYPES = [
   { id: "none", label: "None" },
@@ -324,7 +324,7 @@ export function RequestWorkbench() {
 
             <div className="min-h-0 flex-1">
               {body.type === "none" ? (
-                <BodyNoneBlueprint
+                <BodyNoneState
                   onSelectJson={() =>
                     patchEditor((doc) => ({
                       ...doc,

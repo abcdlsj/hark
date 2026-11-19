@@ -1,12 +1,14 @@
 import {
+  Activity,
   ArrowDownToLine,
   ArrowUpRight,
   Copy,
+  FileBraces,
   Plus,
   RefreshCw,
   Sparkles,
 } from "lucide-react";
-import { relativeTime, splitDuration, statusMeta } from "../lib/format";
+import { isDefaultWorkspace, relativeTime, splitDuration, statusMeta, workspaceLabel } from "../lib/format";
 import { useStore } from "../store";
 import {
   ActorTag,
@@ -18,7 +20,6 @@ import {
   MetricDisplay,
   SegmentedBar,
 } from "./Primitives";
-import { OverviewCardBlueprint } from "./VisualStates";
 
 export function WorkspaceOverview() {
   const {
@@ -53,12 +54,12 @@ export function WorkspaceOverview() {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5">
               <h1 className="truncate text-[22px] font-bold tracking-[-0.025em] text-ink">
-                {workspace || "hark workspace"}
+                {workspaceLabel(workspace)}
               </h1>
               <EnvCapsule env={env} size="sm" />
             </div>
             <p className="mt-1 truncate mono text-[11.5px] text-ink3" title={root}>
-              {root || "Resolving workspace…"}
+              {isDefaultWorkspace(workspace) ? "Default workspace" : root || "Resolving workspace…"}
             </p>
           </div>
 
@@ -162,7 +163,12 @@ export function WorkspaceOverview() {
             </div>
             {apis.length === 0 ? (
               <div className="flex flex-1 flex-col justify-between gap-2 rounded-[10px] border border-dashed border-line-strong bg-surface/60 p-4">
-                <OverviewCardBlueprint kind="endpoints" />
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-cobalt-soft text-cobalt">
+                    <FileBraces className="h-4 w-4" strokeWidth={1.9} />
+                  </div>
+                  <span className="text-[12px] font-semibold text-ink">Nothing saved yet</span>
+                </div>
                 <p className="text-[12px] leading-relaxed text-ink2">
                   Save requests from the UI or drive this workspace from your terminal or coding agent:
                 </p>
@@ -209,9 +215,13 @@ export function WorkspaceOverview() {
             </div>
             {history.length === 0 ? (
               <div className="flex flex-1 flex-col justify-center rounded-[10px] border border-dashed border-line-strong bg-surface/60 p-4 text-[12px] text-ink2">
-                <OverviewCardBlueprint kind="activity" />
-                <span className="font-medium text-ink">No requests executed yet.</span>
-                <span className="mt-1 text-[11.5px] text-ink3">
+                <div className="mb-2 flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-violet-soft text-violet">
+                    <Activity className="h-4 w-4" strokeWidth={1.9} />
+                  </div>
+                  <span className="font-semibold text-ink">No requests executed yet.</span>
+                </div>
+                <span className="text-[11.5px] text-ink3">
                   Runs from both the desktop window and <span className="mono">hark run</span> stream here live.
                 </span>
               </div>

@@ -95,17 +95,8 @@ export function VariablesModal() {
             </div>
             {filteredVars.length === 0 ? (
               <div className="flex flex-col items-center justify-center px-4 py-7 text-center">
-                <div className="mb-2.5 w-[210px] space-y-1.5 rounded-[10px] border border-dashed border-line-strong bg-subtle/50 p-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-14 rounded-[3px] bg-cobalt-soft" />
-                    <span className="h-2.5 flex-1 rounded-[3px] bg-tick-track" />
-                    <span className="h-3 w-10 rounded-full bg-violet-soft" />
-                  </div>
-                  <div className="flex items-center gap-2 opacity-60">
-                    <span className="h-2.5 w-16 rounded-[3px] bg-tick-track" />
-                    <span className="h-2.5 flex-1 rounded-[3px] bg-tick-track" />
-                    <span className="h-3 w-10 rounded-full bg-muted" />
-                  </div>
+                <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[11px] border border-line bg-subtle text-ink3">
+                  <Lock className="h-4.5 w-4.5" strokeWidth={1.8} />
                 </div>
                 <div className="text-[12px] font-medium text-ink2">No variables in this scope yet</div>
                 <div className="mt-0.5 text-[11px] text-ink3">Add a plain variable or keychain secret below.</div>
