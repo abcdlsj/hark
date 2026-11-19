@@ -170,5 +170,5 @@ jobs:
         run: >-
           gh release create "$GITHUB_REF_NAME" dist/*
           --repo "$GITHUB_REPOSITORY"
-          --title "hark $GITHUB_REF_NAME"
+          --title "hark ${GITHUB_REF_NAME#v}"
           --notes-file NOTES.md
