@@ -139,14 +139,16 @@ jobs:
     needs: [darwin, windows, linux]
     runs-on: ubuntu-24.04
     steps:
+      # Checkout first: it runs `git clean -ffdx`, which would delete the
+      # artifacts if they were downloaded before it.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
       # git log needs the history, and the previous tag to describe the range.
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Release notes
         run: |
           set -euo pipefail
