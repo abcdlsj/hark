@@ -143,13 +143,29 @@ jobs:
         with:
           path: dist
           merge-multiple: true
+      # git log needs the history, and the previous tag to describe the range.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Release notes
         run: |
           set -euo pipefail
           VERSION="${GITHUB_REF_NAME#v}"
-          cat > NOTES.md <<EOF
-          hark ${VERSION} — first public desktop build.
-
+          PREV="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
+          {
+            echo "hark ${VERSION}"
+            echo
+            if [ -n "$PREV" ]; then
+              echo "## Changes since ${PREV}"
+              echo
+              git log --no-merges --pretty='- %s' "${PREV}..${GITHUB_REF_NAME}"
+            else
+              echo "## Changes"
+              echo
+              git log --no-merges --pretty='- %s' "${GITHUB_REF_NAME}"
+            fi
+            echo
+            cat <<EOF
           ## Assets
 
           | Platform | File | Notes |
@@ -164,6 +180,7 @@ jobs:
           nearest ancestor with \`envs.yaml\`, or \`~/.hark\`. The CLI ships separately:
           \`go install github.com/abcdlsj/hark/cmd/hark@latest\`.
           EOF
+          } > NOTES.md
       - name: Create release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
