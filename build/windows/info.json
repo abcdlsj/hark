@@ -6,9 +6,9 @@
 		"0409": {
 			"ProductVersion": "0.1.0",
 			"CompanyName": "abcdlsj",
-			"FileDescription": "Local-first API workbench",
+			"FileDescription": "Local-first API workbench for humans and agents",
 			"LegalCopyright": "© 2026 abcdlsj",
-			"ProductName": "hark",
+			"ProductName": "Hark",
 			"Comments": "https://github.com/abcdlsj/hark"
 		}
 	}

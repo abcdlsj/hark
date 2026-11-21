@@ -48,14 +48,14 @@ jobs:
       - name: Package
         run: |
           set -euo pipefail
-          wails3 tool package --format dmg --name hark --out bin \
+          wails3 tool package --format dmg --name Hark --out bin \
             --background build/darwin/dmg-background.png \
             --volume-icon build/darwin/icons.icns \
             --file-icon build/darwin/dmg-file-icon.icns \
             --window-width 540 --window-height 380
           mkdir -p dist
-          ditto -c -k --sequesterRsrc --keepParent bin/hark.app "dist/hark_${VERSION}_darwin_universal.zip"
-          mv bin/hark.dmg "dist/hark_${VERSION}_darwin_universal.dmg"
+          ditto -c -k --sequesterRsrc --keepParent bin/Hark.app "dist/hark_${VERSION}_darwin_universal.zip"
+          mv bin/Hark.dmg "dist/hark_${VERSION}_darwin_universal.dmg"
       - uses: actions/upload-artifact@v4
         with:
           name: darwin
@@ -90,7 +90,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force dist | Out-Null
-          Compress-Archive -Path bin/hark.exe -DestinationPath "dist/hark_$($env:VERSION)_windows_amd64.zip"
+          Compress-Archive -Path bin/Hark.exe -DestinationPath "dist/hark_$($env:VERSION)_windows_amd64.zip"
       - uses: actions/upload-artifact@v4
         with:
           name: windows
@@ -128,7 +128,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          tar -C bin -czf "dist/hark_${VERSION}_linux_amd64.tar.gz" hark
+          tar -C bin -czf "dist/hark_${VERSION}_linux_amd64.tar.gz" Hark
       - uses: actions/upload-artifact@v4
         with:
           name: linux
@@ -153,7 +153,7 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           PREV="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
           {
-            echo "hark ${VERSION}"
+            echo "Hark ${VERSION}"
             echo
             if [ -n "$PREV" ]; then
               echo "## Changes since ${PREV}"
@@ -170,15 +170,25 @@ jobs:
 
           | Platform | File | Notes |
           | --- | --- | --- |
-          | macOS 12+ | \`hark_${VERSION}_darwin_universal.dmg\` / \`.zip\` | Universal (Apple silicon + Intel). Ad-hoc signed, not notarised: first launch needs right-click → Open, or \`xattr -dr com.apple.quarantine /Applications/hark.app\`. |
+          | macOS 12+ | \`hark_${VERSION}_darwin_universal.dmg\` / \`.zip\` | Universal (Apple silicon + Intel). Ad-hoc signed, not notarised: first launch needs right-click → Open, or \`xattr -dr com.apple.quarantine /Applications/Hark.app\`. |
           | Windows 10+ | \`hark_${VERSION}_windows_amd64.zip\` | Needs the WebView2 runtime (preinstalled on Windows 11, bundled with Edge on 10). |
           | Linux x86-64 | \`hark_${VERSION}_linux_amd64.tar.gz\` | GTK 4 + WebKitGTK 6.0, i.e. Ubuntu 24.04 or newer: \`apt install libgtk-4-1 libwebkitgtk-6.0-4\`. |
+
+          ## Install
+
+          macOS, through the Homebrew tap:
+
+          \`\`\`sh
+          brew install --cask abcdlsj/tap/hark
+          \`\`\`
+
+          Otherwise download the archive for your platform above. The CLI is separate:
+          \`go install github.com/abcdlsj/hark/cmd/hark@latest\`.
 
           ## First run
 
           The window opens the workspace from \`--workspace\`, \`\$HARK_WORKSPACE\`, the
-          nearest ancestor with \`envs.yaml\`, or \`~/.hark\`. The CLI ships separately:
-          \`go install github.com/abcdlsj/hark/cmd/hark@latest\`.
+          nearest ancestor with \`envs.yaml\`, or \`~/.hark\`.
           EOF
           } > NOTES.md
       - name: Create release
@@ -187,5 +197,49 @@ jobs:
         run: >-
           gh release create "$GITHUB_REF_NAME" dist/*
           --repo "$GITHUB_REPOSITORY"
-          --title "hark ${GITHUB_REF_NAME#v}"
+          --title "Hark ${GITHUB_REF_NAME#v}"
           --notes-file NOTES.md
+
+      # The cask pins the universal dmg, so it can only be written once that file
+      # exists: generate it from the release asset itself, not from a transcription.
+      # Copy the attached hark.rb into abcdlsj/homebrew-tap's Casks/ afterwards.
+      - name: Homebrew cask
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          DMG="dist/hark_${VERSION}_darwin_universal.dmg"
+          [ -f "$DMG" ] || { echo "::error::missing $DMG"; ls -R dist; exit 1; }
+          SHA="$(sha256sum "$DMG" | cut -d' ' -f1)"
+          cat > hark.rb <<EOF
+          # typed: strict
+          # frozen_string_literal: true
+
+          cask "hark" do
+            version "$VERSION"
+
+            sha256 "$SHA"
+
+            url "https://github.com/abcdlsj/hark/releases/download/v#{version}/hark_#{version}_darwin_universal.dmg"
+            name "Hark"
+            desc "Local-first API workbench for humans and agents"
+            homepage "https://github.com/abcdlsj/hark"
+
+            depends_on macos: :monterey
+
+            app "Hark.app"
+
+            zap trash: [
+              "~/Library/Application Support/com.abcdlsj.hark",
+              "~/Library/Caches/com.abcdlsj.hark",
+              "~/Library/HTTPStorages/com.abcdlsj.hark",
+              "~/Library/Preferences/com.abcdlsj.hark.plist",
+              "~/Library/Saved Application State/com.abcdlsj.hark.savedState",
+              "~/Library/WebKit/com.abcdlsj.hark",
+            ]
+          end
+          EOF
+          cat hark.rb
+          command -v ruby >/dev/null && ruby -c hark.rb
+          gh release upload "$GITHUB_REF_NAME" hark.rb --repo "$GITHUB_REPOSITORY" --clobber

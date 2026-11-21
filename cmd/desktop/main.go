@@ -24,7 +24,7 @@ func init() {
 func main() {
 	svc := &AppService{}
 	app := application.New(application.Options{
-		Name:        "hark",
+		Name:        "Hark",
 		Description: "Local-first API workbench",
 		Services: []application.Service{
 			application.NewService(svc),
@@ -44,7 +44,7 @@ func main() {
 	defer svc.stop()
 
 	app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:            "hark",
+		Title:            "Hark",
 		Width:            1280,
 		Height:           800,
 		MinWidth:         960,

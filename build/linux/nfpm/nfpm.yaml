@@ -17,12 +17,12 @@ license: "MIT"
 release: "1"
 
 contents:
-  - src: "./bin/hark"
-    dst: "/usr/local/bin/hark"
+  - src: "./bin/Hark"
+    dst: "/usr/local/bin/Hark"
   - src: "./build/appicon.png"
     dst: "/usr/share/icons/hicolor/128x128/apps/hark.png"
-  - src: "./build/linux/hark.desktop"
-    dst: "/usr/share/applications/hark.desktop"
+  - src: "./build/linux/Hark.desktop"
+    dst: "/usr/share/applications/Hark.desktop"
 
 # Default dependencies for the GTK4 + WebKitGTK 6.0 stack (Ubuntu 24.04+ / Debian 13+)
 depends:

@@ -1,4 +1,4 @@
-# hark
+# Hark
 
 A local-first, quiet API workbench for humans and AI agents.
 
@@ -15,7 +15,7 @@ you and your agent can drive, from the desktop window or the CLI.
 ## Desktop
 
 ```sh
-task build      # bin/hark.app (macOS), or the platform equivalent
+task build      # bin/Hark.app (macOS), or the platform equivalent
 task dev        # Wails dev mode with Vite hot reload
 ```
 
@@ -34,8 +34,15 @@ read-only snapshot banner when you open an agent run.
 
 ## Install
 
+On macOS, through the tap:
+
+```sh
+brew install --cask abcdlsj/tap/hark
+```
+
 Prebuilt desktop apps for macOS, Windows and Linux are attached to every
-[release](https://github.com/abcdlsj/hark/releases). The CLI installs with Go:
+[release](https://github.com/abcdlsj/hark/releases). The CLI installs with Go and
+stays lowercase, so `hark run` reads the same in a terminal and in the window:
 
 ```sh
 go install github.com/abcdlsj/hark/cmd/hark@latest
@@ -80,6 +87,8 @@ The icon is generated, not hand-drawn: edit `build/icon/generate.mjs`, then
 `node build/icon/generate.mjs && rsvg-convert -w 1024 -h 1024 build/appicon.svg -o build/appicon.png`.
 `task build` turns that PNG into `icons.icns` and `icon.ico`.
 
-Releasing is a tag: `git tag v0.1.0 && git push origin v0.1.0`. The release
+Releasing is a tag: `git tag v0.2.0 && git push origin v0.2.0`. The release
 workflow builds macOS (universal), Windows and Linux, stamps the version into
-the platform metadata and attaches the archives to the GitHub release.
+the platform metadata, writes `hark.rb` from the dmg checksum and attaches both
+to the GitHub release. Copy that `hark.rb` into `Casks/` of
+[abcdlsj/homebrew-tap](https://github.com/abcdlsj/homebrew-tap) after a release.

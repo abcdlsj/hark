@@ -4,9 +4,11 @@
         <key>CFBundlePackageType</key>
             <string>APPL</string>
         <key>CFBundleName</key>
-            <string>hark</string>
+            <string>Hark</string>
+        <key>CFBundleDisplayName</key>
+            <string>Hark</string>
         <key>CFBundleExecutable</key>
-            <string>hark</string>
+            <string>Hark</string>
         <key>CFBundleIdentifier</key>
             <string>com.abcdlsj.hark</string>
         <key>CFBundleVersion</key>

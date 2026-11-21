@@ -6,7 +6,7 @@ version: '3'
 # This information is used to generate the build assets.
 info:
   companyName: "abcdlsj" # The name of the company
-  productName: "hark" # The name of the application
+  productName: "Hark" # The name of the application
   productIdentifier: "com.abcdlsj.hark" # The unique product identifier
   description: "Local-first API workbench for humans and agents" # The application description
   copyright: "(c) 2026, abcdlsj" # Copyright text
