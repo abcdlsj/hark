@@ -67,6 +67,8 @@ interface State {
   sidebarQuery: string;
   layout: "split" | "stack";
   splitRatio: number;
+  stackRatio: number;
+  responseWrap: boolean;
   theme: "light" | "dark";
   composerTab: ComposerTab;
   inspectorTab: InspectorTab;
@@ -76,6 +78,7 @@ interface State {
   varsOpen: boolean;
   varFocus: string | null;
   curlModalOpen: boolean;
+  confirmDeleteId: string | null;
   toast: ToastItem | null;
 
   boot: () => Promise<void>;
@@ -110,6 +113,18 @@ interface State {
 }
 
 let toastSeq = 1;
+let selectSeq = 0;
+let runSeq = 0;
+let historySyncTimer: number | null = null;
+let ratioPersistTimer: number | null = null;
+
+const scheduleRatioPersist = (key: string, value: number) => {
+  if (ratioPersistTimer !== null) window.clearTimeout(ratioPersistTimer);
+  ratioPersistTimer = window.setTimeout(() => {
+    ratioPersistTimer = null;
+    persist(key, value);
+  }, 180);
+};
 
 export const useStore = create<State>((set, get) => ({
   booted: false,
@@ -146,6 +161,8 @@ export const useStore = create<State>((set, get) => ({
   sidebarQuery: "",
   layout: stored<"split" | "stack">("layout", "split"),
   splitRatio: stored<number>("split", 0.5),
+  stackRatio: stored<number>("stack", 0.48),
+  responseWrap: stored<boolean>("responseWrap", false),
   theme: stored<"light" | "dark">("theme", "light"),
   composerTab: "params",
   inspectorTab: "pretty",
@@ -155,6 +172,7 @@ export const useStore = create<State>((set, get) => ({
   varsOpen: false,
   varFocus: null,
   curlModalOpen: false,
+  confirmDeleteId: null,
   toast: null,
 
   boot: async () => {
@@ -180,9 +198,13 @@ export const useStore = create<State>((set, get) => ({
       });
 
       onEvent("run:completed", () => {
-        void Promise.all([api.history(40), api.list()]).then(([history, apis]) => {
-          set({ history, apis, lastSyncedAt: Date.now() });
-        });
+        if (historySyncTimer !== null) window.clearTimeout(historySyncTimer);
+        historySyncTimer = window.setTimeout(() => {
+          historySyncTimer = null;
+          void Promise.all([api.history(40), api.list()]).then(([history, apis]) => {
+            set({ history, apis, lastSyncedAt: Date.now() });
+          });
+        }, 60);
       });
 
       onEvent("env:changed", () => {
@@ -232,9 +254,12 @@ export const useStore = create<State>((set, get) => ({
       get().markSeen(id);
       return;
     }
+    const seq = ++selectSeq;
+    runSeq++;
     set({ loadingApiId: id });
     try {
       const doc = await api.get(id);
+      if (seq !== selectSeq) return;
       set({
         editor: doc,
         selectedId: id,
@@ -247,12 +272,15 @@ export const useStore = create<State>((set, get) => ({
       });
       get().markSeen(id);
     } catch (err) {
+      if (seq !== selectSeq) return;
       set({ loadingApiId: null });
       get().notify(String(err), "error");
     }
   },
 
   closeEditor: () => {
+    selectSeq++;
+    runSeq++;
     set({
       editor: null,
       selectedId: null,
@@ -264,6 +292,8 @@ export const useStore = create<State>((set, get) => ({
   },
 
   newDraft: () => {
+    selectSeq++;
+    runSeq++;
     set({
       editor: emptyApi(""),
       selectedId: null,
@@ -374,9 +404,14 @@ export const useStore = create<State>((set, get) => ({
   sendRequest: async () => {
     const editor = get().editor;
     if (!editor || get().running) return;
+    const seq = ++runSeq;
     set({ running: true, runStartedAt: Date.now(), snapshot: null });
     try {
       const view = await api.run({ api: editor, env: get().env, actor: "human" });
+      if (seq !== runSeq) {
+        set({ running: false, runStartedAt: null });
+        return;
+      }
       set({
         run: view,
         running: false,
@@ -384,12 +419,10 @@ export const useStore = create<State>((set, get) => ({
         inspectorTab: "pretty",
         lastSyncedAt: Date.now(),
       });
-      const [history, apis] = await Promise.all([api.history(40), api.list()]);
-      set({ history, apis, lastSyncedAt: Date.now() });
     } catch (err) {
       const text = String(err);
       set({ running: false, runStartedAt: null });
-      if (!text.toLowerCase().includes("cancel")) {
+      if (seq === runSeq && !text.toLowerCase().includes("cancel")) {
         get().notify(text, "error");
       }
     }
@@ -450,14 +483,17 @@ export const useStore = create<State>((set, get) => ({
   },
 
   openSnapshot: async (logId) => {
+    const seq = ++selectSeq;
     set({ loadingSnapshotId: logId });
     try {
       const log = await api.log(logId);
+      if (seq !== selectSeq) return;
       const currentEditor = get().editor;
       if (!currentEditor) {
         const isSaved = log.api_id && log.api_id !== "_adhoc" && get().apis.some((a) => a.id === log.api_id);
         if (isSaved) {
           const doc = await api.get(log.api_id);
+          if (seq !== selectSeq) return;
           set({
             editor: doc,
             selectedId: log.api_id,
@@ -485,6 +521,7 @@ export const useStore = create<State>((set, get) => ({
       }
       set({ snapshot: log, run: null, loadingSnapshotId: null });
     } catch (err) {
+      if (seq !== selectSeq) return;
       set({ loadingSnapshotId: null });
       get().notify(String(err), "error");
     }
@@ -609,5 +646,7 @@ export const useStore = create<State>((set, get) => ({
 useStore.subscribe((state, prev) => {
   if (state.sidebarOpen !== prev.sidebarOpen) persist("sidebar", state.sidebarOpen);
   if (state.layout !== prev.layout) persist("layout", state.layout);
-  if (state.splitRatio !== prev.splitRatio) persist("split", state.splitRatio);
+  if (state.splitRatio !== prev.splitRatio) scheduleRatioPersist("split", state.splitRatio);
+  if (state.stackRatio !== prev.stackRatio) scheduleRatioPersist("stack", state.stackRatio);
+  if (state.responseWrap !== prev.responseWrap) persist("responseWrap", state.responseWrap);
 });

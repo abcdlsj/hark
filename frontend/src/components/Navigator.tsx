@@ -1,10 +1,11 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { ArrowUpFromLine, ChevronDown, ChevronRight, Copy, MoreHorizontal, Plus, Search, Sparkles, Trash2, X } from "lucide-react";
+import { ArrowUpFromLine, ChevronDown, ChevronRight, Copy, Folder, MoreHorizontal, Plus, Search, Sparkles, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { relativeTime, splitDuration, statusMeta } from "../lib/format";
 import type { ListItem, Log } from "../lib/types";
 import { useStore } from "../store";
-import { ActorTag, cx, EnvCapsule, IconButton, MethodBadge, MetricDisplay, SegmentedTabs, Tip } from "./Primitives";
+import { ActorTag, cx, EnvCapsule, IconButton, MethodBadge, Tip, UnderlineTabs } from "./Primitives";
 import { NavigatorEmptyState, Spinner } from "./VisualStates";
 
 interface Group {
@@ -31,21 +32,37 @@ export function Navigator() {
     apis,
     history,
     selectedId,
-    snapshot,
+    snapshotId,
     agentIds,
     loadingApiId,
     loadingSnapshotId,
     sidebarTab,
     sidebarQuery,
-    lastSyncedAt,
     selectApi,
     newDraft,
     duplicateApi,
-    deleteApi,
     copyCurl,
     openSnapshot,
     set,
-  } = useStore();
+  } = useStore(
+    useShallow((s) => ({
+      apis: s.apis,
+      history: s.history,
+      selectedId: s.selectedId,
+      snapshotId: s.snapshot?.id ?? null,
+      agentIds: s.agentIds,
+      loadingApiId: s.loadingApiId,
+      loadingSnapshotId: s.loadingSnapshotId,
+      sidebarTab: s.sidebarTab,
+      sidebarQuery: s.sidebarQuery,
+      selectApi: s.selectApi,
+      newDraft: s.newDraft,
+      duplicateApi: s.duplicateApi,
+      copyCurl: s.copyCurl,
+      openSnapshot: s.openSnapshot,
+      set: s.set,
+    })),
+  );
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [now, setNow] = useState(() => Date.now());
@@ -84,11 +101,11 @@ export function Navigator() {
   const agentUnseenCount = agentIds.length;
 
   return (
-    <aside className="island flex w-[258px] shrink-0 flex-col overflow-hidden">
-      {/* Top tab switch + New button */}
-      <div className="flex h-[44px] shrink-0 items-center justify-between gap-2 border-b border-line px-2.5">
-        <SegmentedTabs
-          size="xs"
+    <aside className="flex h-full w-[252px] shrink-0 flex-col border-r border-line bg-chrome">
+      {/* Underline Tab Bar + New Button */}
+      <div className="flex h-[38px] shrink-0 items-center justify-between gap-2 border-b border-line px-2.5">
+        <UnderlineTabs
+          compact
           value={sidebarTab}
           onChange={(tab) => set({ sidebarTab: tab })}
           items={[
@@ -96,48 +113,42 @@ export function Navigator() {
             {
               id: "activity",
               label: "Activity",
-              badge: (
-                <span className="inline-flex items-center gap-1">
-                  <span>{history.length}</span>
-                  {agentUnseenCount > 0 && <span className="h-1.5 w-1.5 rounded-full bg-violet" />}
-                </span>
-              ),
+              badge: history.length,
+              indicator: agentUnseenCount > 0,
             },
           ]}
         />
         <Tip label="New request (⌘N)">
-          <IconButton variant="secondary" onClick={newDraft}>
-            <Plus className="h-4 w-4" strokeWidth={2} />
+          <IconButton size="xs" variant="secondary" onClick={newDraft}>
+            <Plus className="h-3.5 w-3.5" strokeWidth={2.1} />
           </IconButton>
         </Tip>
       </div>
 
-      {/* Filter bar */}
-      <div className="shrink-0 border-b border-line/70 px-2.5 py-2">
-        <div className="flex h-[30px] items-center gap-1.5 rounded-[9px] border border-line bg-subtle px-2.5 focus-within:border-cobalt/45 focus-within:bg-surface">
-          <Search className="h-3.5 w-3.5 shrink-0 text-ink3" strokeWidth={1.9} />
-          <input
-            value={sidebarQuery}
-            onChange={(e) => set({ sidebarQuery: e.target.value })}
-            placeholder={sidebarTab === "endpoints" ? "Filter endpoints…" : "Filter activity…"}
-            spellCheck={false}
-            className="w-full min-w-0 bg-transparent text-[12px] text-ink placeholder:text-ink3"
-          />
-          {sidebarQuery && (
-            <button
-              type="button"
-              onClick={() => set({ sidebarQuery: "" })}
-              className="text-ink3 hover:text-ink"
-              title="Clear filter"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          )}
-        </div>
+      {/* Integrated Filter Input */}
+      <div className="flex h-[34px] shrink-0 items-center gap-2 border-b border-line bg-canvas px-2.5 focus-within:bg-canvas">
+        <Search className="h-3.5 w-3.5 shrink-0 text-ink3" strokeWidth={1.85} />
+        <input
+          value={sidebarQuery}
+          onChange={(e) => set({ sidebarQuery: e.target.value })}
+          placeholder={sidebarTab === "endpoints" ? "Filter endpoints…" : "Filter activity…"}
+          spellCheck={false}
+          className="h-full w-full min-w-0 bg-transparent text-[12px] text-ink placeholder:text-ink3"
+        />
+        {sidebarQuery && (
+          <button
+            type="button"
+            onClick={() => set({ sidebarQuery: "" })}
+            className="text-ink3 hover:text-ink"
+            title="Clear filter"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        )}
       </div>
 
       {/* List Body */}
-      <div className="scroll min-h-0 flex-1 overflow-y-auto px-2 py-2">
+      <div className="scroll min-h-0 flex-1 overflow-y-auto py-1.5">
         {sidebarTab === "endpoints" ? (
           groups.length === 0 ? (
             <NavigatorEmptyState
@@ -147,7 +158,7 @@ export function Navigator() {
               onClearFilter={() => set({ sidebarQuery: "" })}
             />
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1">
               {groups.map((group) => {
                 const isCollapsed = group.name !== "" && Boolean(collapsed[group.name]) && !query;
                 return (
@@ -158,14 +169,15 @@ export function Navigator() {
                         onClick={() =>
                           setCollapsed((prev) => ({ ...prev, [group.name]: !prev[group.name] }))
                         }
-                        className="motion group mb-0.5 flex h-[24px] w-full items-center gap-1.5 rounded-[7px] px-2 text-left hover:bg-subtle"
+                        className="motion group flex h-[26px] w-full items-center gap-1.5 px-2.5 text-left text-ink2 hover:bg-subtle hover:text-ink"
                       >
                         {isCollapsed ? (
-                          <ChevronRight className="h-3 w-3 text-ink3 group-hover:text-ink2" />
+                          <ChevronRight className="h-3 w-3 shrink-0 text-ink3" />
                         ) : (
-                          <ChevronDown className="h-3 w-3 text-ink3 group-hover:text-ink2" />
+                          <ChevronDown className="h-3 w-3 shrink-0 text-ink3" />
                         )}
-                        <span className="eyebrow truncate text-[10px] tracking-[0.08em] text-ink3 group-hover:text-ink2">
+                        <Folder className="h-3 w-3 shrink-0 text-ink3" strokeWidth={1.8} />
+                        <span className="truncate text-[11.5px] font-semibold tracking-tight">
                           {group.name}
                         </span>
                         <span className="ml-auto mono text-[10px] text-ink3">{group.items.length}</span>
@@ -173,7 +185,7 @@ export function Navigator() {
                     )}
 
                     {!isCollapsed && (
-                      <div className="space-y-0.5">
+                      <div>
                         {group.items.map((item) => {
                           const active = item.id === selectedId;
                           const action = item.id.slice(item.id.lastIndexOf("/") + 1);
@@ -189,34 +201,35 @@ export function Navigator() {
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") void selectApi(item.id);
                               }}
-                              title={`${item.method} ${item.url}`}
+                              title={`${item.name && item.name !== item.id ? `${item.name} (${item.id})\n` : `${item.id}\n`}${item.method} ${item.url}`}
                               className={cx(
-                                "motion group flex h-[34px] cursor-default items-center gap-2 rounded-[9px] px-2",
+                                "motion group relative flex h-[30px] cursor-default items-center gap-2 pr-2",
+                                group.name ? "pl-5" : "pl-3",
                                 active
-                                  ? "bg-cobalt-soft/85 text-ink"
-                                  : "text-ink2 hover:bg-subtle hover:text-ink",
+                                  ? "bg-subtle text-ink before:absolute before:inset-y-0 before:left-0 before:w-[2px] before:bg-accent"
+                                  : "text-ink2 hover:bg-subtle/70 hover:text-ink",
                               )}
                             >
                               <MethodBadge
                                 method={item.method}
                                 short
-                                className="w-[42px] shrink-0 justify-center text-[9.5px]"
+                                className="w-[34px] shrink-0 text-left text-[10px]"
                               />
                               <span
                                 className={cx(
-                                  "min-w-0 flex-1 truncate text-[12.5px]",
-                                  active ? "font-semibold text-ink" : "font-medium",
+                                  "min-w-0 flex-1 truncate text-[12px]",
+                                  active ? "font-semibold text-ink" : "font-normal",
                                 )}
                               >
                                 {item.name && item.name !== item.id ? item.name : action}
                               </span>
 
                               <div className="flex shrink-0 items-center gap-1">
-                                {loadingApiId === item.id && <Spinner className="h-3 w-3 text-cobalt" />}
+                                {loadingApiId === item.id && <Spinner className="h-3 w-3 text-accent-text" />}
                                 {hasAgentDot && loadingApiId !== item.id && (
                                   <span
                                     title="Updated by AI agent"
-                                    className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-violet-soft text-violet"
+                                    className="inline-flex h-4 w-4 items-center justify-center rounded bg-violet-soft text-violet"
                                   >
                                     <Sparkles className="h-2.5 w-2.5" />
                                   </span>
@@ -232,7 +245,7 @@ export function Navigator() {
                                     <button
                                       type="button"
                                       onClick={(e) => e.stopPropagation()}
-                                      className="hidden h-5 w-5 items-center justify-center rounded-[5px] text-ink3 hover:bg-surface hover:text-ink group-hover:flex"
+                                      className="hidden h-5 w-5 items-center justify-center rounded text-ink3 hover:bg-muted hover:text-ink group-hover:flex"
                                       title="Endpoint actions"
                                     >
                                       <MoreHorizontal className="h-3.5 w-3.5" />
@@ -242,37 +255,37 @@ export function Navigator() {
                                     <DropdownMenu.Content
                                       align="end"
                                       sideOffset={4}
-                                      className="floating-surface floating-pop z-50 min-w-[180px] rounded-[11px] p-1"
+                                      className="popover-surface floating-pop z-50 min-w-[185px] rounded-lg p-1"
                                       onClick={(e) => e.stopPropagation()}
                                     >
                                       <DropdownMenu.Item
                                         onSelect={() => void duplicateApi(item.id)}
-                                        className="motion flex cursor-default items-center gap-2 rounded-[7px] px-2.5 py-1.5 text-[12px] text-ink outline-none data-[highlighted]:bg-muted"
+                                        className="motion flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-ink outline-none data-[highlighted]:bg-subtle"
                                       >
                                         <Copy className="h-3.5 w-3.5 text-ink3" />
                                         <span>Duplicate…</span>
                                       </DropdownMenu.Item>
                                       <DropdownMenu.Item
                                         onSelect={() => void copyCurl(false, item.id)}
-                                        className="motion flex cursor-default items-center gap-2 rounded-[7px] px-2.5 py-1.5 text-[12px] text-ink outline-none data-[highlighted]:bg-muted"
+                                        className="motion flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-ink outline-none data-[highlighted]:bg-subtle"
                                       >
                                         <ArrowUpFromLine className="h-3.5 w-3.5 text-ink3" />
-                                        <span>Export cURL ({"{{placeholders}}"})</span>
+                                        <span>Export cURL ({"{{vars}}"})</span>
                                       </DropdownMenu.Item>
                                       <DropdownMenu.Item
                                         onSelect={() => void copyCurl(true, item.id)}
-                                        className="motion flex cursor-default items-center gap-2 rounded-[7px] px-2.5 py-1.5 text-[12px] text-ink2 outline-none data-[highlighted]:bg-muted data-[highlighted]:text-ink"
+                                        className="motion flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-ink2 outline-none data-[highlighted]:bg-subtle data-[highlighted]:text-ink"
                                       >
                                         <ArrowUpFromLine className="h-3.5 w-3.5 text-ink3" />
                                         <span>Export cURL (resolved)</span>
                                       </DropdownMenu.Item>
                                       <DropdownMenu.Separator className="my-1 h-px bg-line" />
                                       <DropdownMenu.Item
-                                        onSelect={() => void deleteApi(item.id)}
-                                        className="motion flex cursor-default items-center gap-2 rounded-[7px] px-2.5 py-1.5 text-[12px] text-rose outline-none data-[highlighted]:bg-rose-soft"
+                                        onSelect={() => set({ confirmDeleteId: item.id })}
+                                        className="motion flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-rose outline-none data-[highlighted]:bg-rose-soft"
                                       >
                                         <Trash2 className="h-3.5 w-3.5" />
-                                        <span>Delete</span>
+                                        <span>Delete…</span>
                                       </DropdownMenu.Item>
                                     </DropdownMenu.Content>
                                   </DropdownMenu.Portal>
@@ -296,40 +309,18 @@ export function Navigator() {
             onClearFilter={() => set({ sidebarQuery: "" })}
           />
         ) : (
-          <div className="divide-y divide-line/80">
+          <div className="divide-y divide-line-subtle">
             {filteredHistory.map((log) => (
               <ActivityRow
                 key={log.id}
                 log={log}
                 now={now}
-                active={snapshot?.id === log.id}
+                active={snapshotId === log.id}
                 loading={loadingSnapshotId === log.id}
                 onClick={() => void openSnapshot(log.id)}
               />
             ))}
           </div>
-        )}
-      </div>
-
-      {/* Ambient relative timestamp footer (Gauge-inspired) */}
-      <div className="flex h-[32px] shrink-0 items-center justify-between border-t border-line bg-subtle/50 px-3 text-[11px] text-ink3">
-        <span>
-          updated <strong className="font-semibold text-ink2">{relativeTime(lastSyncedAt, now)}</strong>
-        </span>
-        {agentUnseenCount > 0 ? (
-          <button
-            type="button"
-            onClick={() => set({ sidebarTab: "activity" })}
-            className="inline-flex items-center gap-1 font-semibold text-violet hover:underline"
-          >
-            <Sparkles className="h-2.5 w-2.5" />
-            <span>{agentUnseenCount} agent</span>
-          </button>
-        ) : (
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald" />
-            <span>IPC live</span>
-          </span>
         )}
       </div>
     </aside>
@@ -357,30 +348,36 @@ function ActivityRow({
     <button
       type="button"
       onClick={onClick}
+      title={`${log.method} ${log.url}`}
       className={cx(
-        "motion flex w-full flex-col gap-1.5 rounded-[9px] px-2 py-2.5 text-left",
-        active ? "bg-cobalt-soft/80" : "hover:bg-subtle",
+        "motion relative flex w-full flex-col gap-1 px-3 py-2 text-left",
+        active
+          ? "bg-subtle before:absolute before:inset-y-0 before:left-0 before:w-[2px] before:bg-accent"
+          : "hover:bg-subtle/70",
       )}
     >
       <div className="flex items-center gap-1.5">
-        <ActorTag actor={log.actor} compact />
-        <MethodBadge method={log.method} short pill={false} />
-        <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-ink">{name}</span>
+        <MethodBadge method={log.method} short className="w-[34px] shrink-0 text-[10px]" />
+        <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-ink">{name}</span>
         {loading ? (
-          <Spinner className="h-3 w-3 text-cobalt" />
+          <Spinner className="h-3 w-3 text-accent-text" />
         ) : (
-          <span className={cx("mono text-[11px] font-bold", sMeta.textClass)}>
+          <span className={cx("mono text-[11px] font-semibold", sMeta.textClass)}>
             {log.status || (log.error ? "ERR" : "—")}
           </span>
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-2 text-[11px] text-ink3">
+      <div className="flex items-center justify-between gap-2 text-[10.5px] text-ink3">
         <div className="flex min-w-0 items-center gap-1.5">
+          <ActorTag actor={log.actor} size="xs" />
           <EnvCapsule env={log.env} size="xs" />
-          <span>{relativeTime(log.ts, now)}</span>
+          <span className="truncate">{relativeTime(log.ts, now)}</span>
         </div>
-        <MetricDisplay num={dur.num} unit={dur.unit} size="sm" />
+        <span className="mono shrink-0 text-ink2">
+          {dur.num}
+          <span className="ml-0.5 text-ink3">{dur.unit}</span>
+        </span>
       </div>
     </button>
   );

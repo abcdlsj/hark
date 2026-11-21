@@ -33,6 +33,7 @@ type AppService struct {
 
 	cancelMu sync.Mutex
 	cancel   context.CancelFunc
+	runID    uint64
 }
 
 // Bootstrap is everything the first paint needs.
@@ -124,6 +125,7 @@ func (s *AppService) start() error {
 }
 
 func (s *AppService) stop() {
+	s.CancelRun()
 	s.mu.Lock()
 	srv, o := s.srv, s.o
 	s.srv, s.o = nil, nil
@@ -138,6 +140,7 @@ func (s *AppService) stop() {
 
 // open replaces the current workspace.
 func (s *AppService) open(root string) error {
+	s.CancelRun()
 	o, err := ops.New(root, nil, func(name string, data any) {
 		if s.app != nil {
 			// All payloads are objects; the frontend treats them as untyped maps.
@@ -265,11 +268,18 @@ func (s *AppService) Run(req RunRequest) (RunView, error) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	s.cancelMu.Lock()
+	if s.cancel != nil {
+		s.cancel()
+	}
+	s.runID++
+	myRunID := s.runID
 	s.cancel = cancel
 	s.cancelMu.Unlock()
 	defer func() {
 		s.cancelMu.Lock()
-		s.cancel = nil
+		if s.runID == myRunID {
+			s.cancel = nil
+		}
 		s.cancelMu.Unlock()
 		cancel()
 	}()

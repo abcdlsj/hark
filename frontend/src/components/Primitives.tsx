@@ -17,13 +17,13 @@ export function Tip({
   side?: "top" | "bottom" | "left" | "right";
 }) {
   return (
-    <Tooltip.Root delayDuration={240}>
+    <Tooltip.Root delayDuration={260}>
       <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content
           side={side}
           sideOffset={6}
-          className="floating-surface floating-pop z-50 rounded-[8px] px-2.5 py-1 text-[11px] font-medium text-ink"
+          className="popover-surface floating-pop z-50 rounded-md px-2 py-1 text-[11px] font-medium text-ink"
         >
           {label}
         </Tooltip.Content>
@@ -36,7 +36,7 @@ export function Kbd({ children, className }: { children: ReactNode; className?: 
   return (
     <kbd
       className={cx(
-        "mono inline-flex items-center justify-center rounded-[5px] border border-line bg-subtle px-1.5 py-[2px] text-[10px] font-medium leading-none text-ink3",
+        "mono inline-flex min-h-[17px] min-w-[17px] items-center justify-center rounded border border-line-strong bg-subtle px-1 py-[1px] text-[10px] font-medium leading-none text-ink2",
         className,
       )}
     >
@@ -46,12 +46,8 @@ export function Kbd({ children, className }: { children: ReactNode; className?: 
 }
 
 /**
- * Renders one label out of several in a single grid cell, so the widest variant
- * sets the box. Inactive labels stay in the layout (hidden, not removed), which
- * keeps buttons from resizing when busy/idle text swaps.
- *
- * Use it for any control whose label changes with state; add the same pattern
- * for hint chips that only appear in one state.
+ * Renders one label out of several in a single grid cell so the widest variant
+ * sets the box. Inactive labels stay mounted (invisible) to prevent layout shift.
  */
 export function SwapText({
   value,
@@ -83,6 +79,7 @@ export function IconButton({
   onClick,
   active,
   variant = "ghost",
+  size = "sm",
   className,
   title,
   disabled,
@@ -91,10 +88,12 @@ export function IconButton({
   onClick?: () => void;
   active?: boolean;
   variant?: "ghost" | "secondary";
+  size?: "xs" | "sm";
   className?: string;
   title?: string;
   disabled?: boolean;
 }) {
+  const dims = size === "xs" ? "h-[24px] w-[24px]" : "h-[28px] w-[28px]";
   return (
     <button
       type="button"
@@ -102,13 +101,14 @@ export function IconButton({
       title={title}
       disabled={disabled}
       className={cx(
-        "motion inline-flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[8px] border",
+        "motion inline-flex shrink-0 items-center justify-center rounded-md border",
+        dims,
         active
-          ? "border-line-strong bg-surface text-ink shadow-xs"
+          ? "border-line-strong bg-subtle text-ink"
           : variant === "secondary"
-            ? "border-line bg-surface text-ink2 shadow-2xs hover:border-line-strong hover:bg-subtle hover:text-ink"
-            : "border-transparent text-ink2 hover:border-line hover:bg-surface/80 hover:text-ink",
-        disabled ? "pointer-events-none opacity-40" : "active:scale-[0.96]",
+            ? "border-line bg-canvas text-ink2 hover:border-line-strong hover:bg-subtle hover:text-ink"
+            : "border-transparent text-ink2 hover:bg-subtle hover:text-ink",
+        disabled && "pointer-events-none opacity-40",
         className,
       )}
     >
@@ -137,15 +137,15 @@ export function Button({
   type?: "button" | "submit";
 }) {
   const sizes = {
-    xs: "h-[24px] px-2 text-[11px] rounded-[6px]",
-    sm: "h-[28px] px-2.5 text-[12px] rounded-[8px]",
-    md: "h-[32px] px-3.5 text-[12.5px] rounded-[9px]",
+    xs: "h-[24px] px-2 text-[11px] rounded",
+    sm: "h-[28px] px-2.5 text-[12px] rounded-md",
+    md: "h-[32px] px-3.5 text-[12.5px] rounded-md",
   };
   const variants = {
-    primary: "border border-transparent bg-cobalt text-white font-medium hover:brightness-110 shadow-xs",
-    secondary: "border border-line bg-surface text-ink2 hover:border-line-strong hover:text-ink hover:bg-subtle",
-    ghost: "border border-transparent text-ink2 hover:bg-muted/70 hover:text-ink",
-    danger: "border border-rose/25 bg-rose-soft text-rose hover:border-rose/40",
+    primary: "border border-transparent bg-accent text-white font-semibold hover:bg-accent-hover",
+    secondary: "border border-line bg-canvas text-ink hover:border-line-strong hover:bg-subtle",
+    ghost: "border border-transparent text-ink2 hover:bg-subtle hover:text-ink",
+    danger: "border border-rose/30 bg-rose-soft text-rose hover:border-rose/50",
   };
   return (
     <button
@@ -157,7 +157,7 @@ export function Button({
         "motion inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap font-medium",
         sizes[size],
         variants[variant],
-        disabled ? "pointer-events-none opacity-40" : "active:scale-[0.96]",
+        disabled && "pointer-events-none opacity-40",
         className,
       )}
     >
@@ -174,15 +174,14 @@ export interface BarSegment {
 }
 
 /**
- * Gauge-inspired segmented discrete tick bar.
- * Supports either single-ratio fill (`ratio` 0..1) or proportional multi-phase `segments`.
+ * Clean proportional bar for health ratios and network phase breakdowns.
  */
 export function SegmentedBar({
   ticks = 28,
   ratio,
-  fillClass = "bg-cobalt",
+  fillClass = "bg-accent",
   segments,
-  heightClass = "h-[11px]",
+  heightClass = "h-[8px]",
   className,
 }: {
   ticks?: number;
@@ -192,68 +191,41 @@ export function SegmentedBar({
   heightClass?: string;
   className?: string;
 }) {
-  const tickColors: { color: string; title?: string }[] = [];
-
   if (segments && segments.length > 0) {
     const positive = segments.filter((s) => s.value > 0);
     const total = positive.reduce((acc, s) => acc + s.value, 0);
     if (total <= 0) {
-      for (let i = 0; i < ticks; i++) tickColors.push({ color: "bg-tick-track" });
-    } else {
-      // Fair largest-remainder allocation with minimum 1 tick per non-zero phase when possible.
-      const counts = positive.map((s) => {
-        const exact = (s.value / total) * ticks;
-        return { s, exact, count: Math.floor(exact) };
-      });
-      for (const c of counts) {
-        if (c.count === 0) c.count = 1;
-      }
-      let sum = counts.reduce((acc, c) => acc + c.count, 0);
-      while (sum > ticks) {
-        const largest = counts.reduce((best, c) => (c.count > best.count ? c : best), counts[0]);
-        if (largest.count <= 1) break;
-        largest.count -= 1;
-        sum -= 1;
-      }
-      while (sum < ticks) {
-        const best = counts.reduce(
-          (pick, c) => (c.exact - c.count > pick.exact - pick.count ? c : pick),
-          counts[0],
-        );
-        best.count += 1;
-        sum += 1;
-      }
-      for (const c of counts) {
-        for (let i = 0; i < c.count && tickColors.length < ticks; i++) {
-          tickColors.push({
-            color: c.s.colorClass,
-            title: c.s.label ? `${c.s.label}: ${c.s.value.toFixed(1)} ms` : undefined,
-          });
-        }
-      }
+      return <div className={cx("w-full overflow-hidden rounded-[2px] bg-tick-track", heightClass, className)} />;
     }
-  } else {
-    const clamped = Math.max(0, Math.min(1, ratio ?? 0));
-    const filled = Math.round(clamped * ticks);
-    for (let i = 0; i < ticks; i++) {
-      tickColors.push({ color: i < filled ? fillClass : "bg-tick-track" });
-    }
+    return (
+      <div className={cx("flex w-full items-stretch gap-[1.5px] overflow-hidden rounded-[2px] bg-tick-track", heightClass, className)}>
+        {positive.map((seg) => (
+          <span
+            key={seg.key}
+            title={seg.label ? `${seg.label}: ${seg.value.toFixed(1)} ms` : undefined}
+            style={{ width: `${Math.max((seg.value / total) * 100, 2)}%` }}
+            className={cx("h-full transition-[width] duration-200", seg.colorClass)}
+          />
+        ))}
+      </div>
+    );
   }
 
+  const clamped = Math.max(0, Math.min(1, ratio ?? 0));
+  const filled = Math.round(clamped * ticks);
   return (
-    <div className={cx("flex items-center gap-[2.5px]", className)}>
-      {tickColors.map((tick, idx) => (
+    <div className={cx("flex items-center gap-[2px]", className)}>
+      {Array.from({ length: ticks }).map((_, idx) => (
         <span
           key={idx}
-          title={tick.title}
-          className={cx("flex-1 rounded-[2.5px] transition-colors duration-300", heightClass, tick.color)}
+          className={cx("flex-1 rounded-[1.5px]", heightClass, idx < filled ? fillClass : "bg-tick-track")}
         />
       ))}
     </div>
   );
 }
 
-/** Gauge-style split telemetry numeral: bold primary figure + muted unit suffix. */
+/** Split telemetry numeral: tabular figure + muted unit suffix. */
 export function MetricDisplay({
   num,
   unit,
@@ -265,11 +237,11 @@ export function MetricDisplay({
   size?: "sm" | "md" | "lg";
   className?: string;
 }) {
-  const numSize = size === "lg" ? "text-[22px]" : size === "sm" ? "text-[14px]" : "text-[18px]";
-  const unitSize = size === "lg" ? "text-[12px]" : size === "sm" ? "text-[10.5px]" : "text-[11px]";
+  const numSize = size === "lg" ? "text-[20px]" : size === "sm" ? "text-[12px]" : "text-[15px]";
+  const unitSize = size === "lg" ? "text-[11.5px]" : size === "sm" ? "text-[10.5px]" : "text-[11px]";
   return (
-    <span className={cx("inline-flex items-baseline tabular leading-none", className)}>
-      <span className={cx("font-bold tracking-[-0.02em] text-ink", numSize)}>{num}</span>
+    <span className={cx("inline-flex items-baseline mono tabular leading-none", className)}>
+      <span className={cx("font-semibold tracking-[-0.02em] text-ink", numSize)}>{num}</span>
       {unit && <span className={cx("ml-1 font-normal text-ink3", unitSize)}>{unit}</span>}
     </span>
   );
@@ -278,7 +250,7 @@ export function MetricDisplay({
 export function MethodBadge({
   method,
   short = false,
-  pill = true,
+  pill = false,
   className,
 }: {
   method: string;
@@ -289,7 +261,7 @@ export function MethodBadge({
   const meta = methodMeta(method);
   if (!pill) {
     return (
-      <span className={cx("mono text-[10.5px] font-semibold tracking-[0.03em]", meta.textClass, className)}>
+      <span className={cx("mono text-[10.5px] font-semibold tracking-[0.02em]", meta.textClass, className)}>
         {short ? meta.short : meta.label}
       </span>
     );
@@ -297,7 +269,7 @@ export function MethodBadge({
   return (
     <span
       className={cx(
-        "mono inline-flex items-center justify-center rounded-[5px] px-1.5 py-[2px] text-[10px] font-semibold tracking-[0.03em]",
+        "mono inline-flex items-center justify-center rounded px-1.5 py-[1px] text-[10px] font-semibold tracking-[0.02em]",
         meta.pillClass,
         className,
       )}
@@ -318,7 +290,7 @@ export function StatusCapsule({
 }) {
   if (!status && hasError) {
     return (
-      <span className="mono inline-flex items-center gap-1.5 rounded-full bg-rose-soft px-2.5 py-[3px] text-[11.5px] font-semibold text-rose">
+      <span className="mono inline-flex items-center gap-1.5 rounded border border-rose/25 bg-rose-soft px-2 py-[2px] text-[11.5px] font-semibold text-rose">
         <span className="h-1.5 w-1.5 rounded-full bg-rose" />
         ERR
       </span>
@@ -328,13 +300,13 @@ export function StatusCapsule({
   return (
     <span
       className={cx(
-        "mono inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] text-[11.5px] font-semibold",
+        "mono inline-flex items-center gap-1.5 rounded border border-current/15 px-2 py-[2px] text-[11.5px] font-semibold",
         meta.pillClass,
       )}
     >
       <span className={cx("h-1.5 w-1.5 rounded-full", meta.dotClass)} />
       <span>{status || "—"}</span>
-      {text && <span className="font-normal opacity-80">{text}</span>}
+      {text && <span className="font-medium opacity-85">{text}</span>}
     </span>
   );
 }
@@ -342,31 +314,30 @@ export function StatusCapsule({
 export function ActorTag({
   actor,
   size = "sm",
-  compact = false,
 }: {
   actor: string;
   size?: "xs" | "sm";
   compact?: boolean;
 }) {
   const isAgent = actor === "agent";
-  const sizing = size === "xs" ? "px-1.5 py-[1px] text-[9.5px]" : "px-2 py-[2px] text-[10px]";
+  const sizing = size === "xs" ? "px-1.5 py-[1px] text-[9.5px]" : "px-1.5 py-[2px] text-[10px]";
   if (isAgent) {
     return (
       <span
         className={cx(
-          "inline-flex shrink-0 items-center gap-1 rounded-full bg-violet-soft font-bold uppercase tracking-[0.07em] text-violet",
+          "inline-flex shrink-0 items-center gap-1 rounded border border-violet/25 bg-violet-soft font-semibold uppercase tracking-[0.05em] text-violet",
           sizing,
         )}
       >
         <Sparkles className="h-2.5 w-2.5" strokeWidth={2.2} />
-        {compact ? "Agent" : "Agent"}
+        Agent
       </span>
     );
   }
   return (
     <span
       className={cx(
-        "inline-flex shrink-0 items-center rounded-full bg-muted font-semibold uppercase tracking-[0.07em] text-ink3",
+        "inline-flex shrink-0 items-center rounded border border-line bg-subtle font-medium uppercase tracking-[0.05em] text-ink3",
         sizing,
       )}
     >
@@ -390,74 +361,89 @@ export function EnvCapsule({
   const isProd = /prod|production|live/i.test(name);
   const isStaging = /stag|stage|dev|test/i.test(name);
   const style = isProd
-    ? "bg-gradient-to-r from-amber/15 to-rose/15 text-amber border-amber/25"
+    ? "border-amber/35 bg-amber-soft text-amber"
     : isStaging
-      ? "bg-gradient-to-r from-cobalt/15 to-emerald/15 text-cobalt border-cobalt/25"
-      : "bg-gradient-to-r from-cobalt/12 to-violet/12 text-cobalt border-cobalt/20";
-  const dot = isProd ? "bg-amber" : isStaging ? "bg-emerald" : "bg-cobalt";
+      ? "border-line bg-canvas text-ink"
+      : "border-line bg-canvas text-ink";
+  const dot = isProd ? "bg-amber" : isStaging ? "bg-emerald" : "bg-accent";
 
   return (
     <span
       className={cx(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-full border font-semibold tracking-tight",
-        size === "xs" ? "h-[20px] px-2 text-[10px]" : "h-[28px] px-2.5 text-[11px]",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-md border font-medium",
+        size === "xs" ? "h-[20px] px-1.5 text-[10.5px]" : "h-[28px] px-2.5 text-[11.5px]",
         style,
+        interactive && !isProd && "hover:border-line-strong hover:bg-subtle",
       )}
     >
-      <span className={cx("h-1.5 w-1.5 rounded-full", dot)} />
-      <span className="mono">{name}</span>
-      {/* Same 12px box in every state so switching environments cannot resize the capsule. */}
+      <span className={cx("h-1.5 w-1.5 shrink-0 rounded-full", dot)} />
+      <span className="mono truncate max-w-[120px]">{name}</span>
       {busy ? (
         <span className="h-3 w-3 animate-spin rounded-full border-[1.5px] border-current/25 border-t-current" />
       ) : interactive ? (
-        <ChevronDown className="h-3 w-3 opacity-70" strokeWidth={2} />
+        <ChevronDown className="h-3 w-3 text-ink3" strokeWidth={2} />
       ) : null}
     </span>
   );
 }
 
-export interface SegmentedTabItem<T extends string> {
+export interface TabItem<T extends string> {
   id: T;
   label: string;
   badge?: ReactNode;
+  indicator?: boolean;
 }
 
-export function SegmentedTabs<T extends string>({
+/**
+ * Hoppscotch-style flat underline tab strip: zero visual clutter, crisp 2px active indicator.
+ */
+export function UnderlineTabs<T extends string>({
   items,
   value,
   onChange,
-  size = "sm",
+  compact = false,
   className,
 }: {
-  items: SegmentedTabItem<T>[];
+  items: TabItem<T>[];
   value: T;
   onChange: (next: T) => void;
-  size?: "xs" | "sm";
+  compact?: boolean;
   className?: string;
 }) {
   return (
-    <div
-      className={cx(
-        "inline-flex shrink-0 items-center gap-0.5 rounded-[10px] bg-muted p-[3px]",
-        className,
-      )}
-    >
+    <div role="tablist" className={cx("flex h-full items-stretch gap-1", className)}>
       {items.map((item) => {
         const active = item.id === value;
         return (
           <button
             key={item.id}
+            role="tab"
+            aria-selected={active}
             type="button"
             onClick={() => onChange(item.id)}
             className={cx(
-              "motion inline-flex items-center gap-1.5 whitespace-nowrap rounded-[7px] font-medium",
-              size === "xs" ? "h-[22px] px-2 text-[11px]" : "h-[25px] px-2.5 text-[12px]",
-              active ? "bg-surface text-ink shadow-xs" : "text-ink2 hover:text-ink",
+              "motion relative inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 text-[12px]",
+              compact ? "px-2" : "px-2.5",
+              active
+                ? "border-accent font-semibold text-ink"
+                : "border-transparent font-medium text-ink2 hover:text-ink",
             )}
           >
             <span>{item.label}</span>
             {item.badge !== undefined && item.badge !== null && (
-              <span className={cx("mono text-[10px]", active ? "text-ink2" : "text-ink3")}>{item.badge}</span>
+              <span
+                className={cx(
+                  "mono rounded border px-1 py-[0.5px] text-[10px] leading-tight",
+                  active
+                    ? "border-line-strong bg-subtle text-ink"
+                    : "border-line bg-subtle/70 text-ink3",
+                )}
+              >
+                {item.badge}
+              </span>
+            )}
+            {item.indicator && !item.badge && (
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
             )}
           </button>
         );

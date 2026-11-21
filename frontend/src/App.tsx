@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { CommandPalette } from "./components/CommandPalette";
+import { ConfirmDeleteModal } from "./components/ConfirmDeleteModal";
 import { CurlImportModal } from "./components/CurlImportModal";
 import { Navigator } from "./components/Navigator";
 import { cx, TooltipProvider } from "./components/Primitives";
 import { RequestWorkbench } from "./components/RequestWorkbench";
 import { ResponseInspector } from "./components/ResponseInspector";
+import { StatusBar } from "./components/StatusBar";
 import { ToastHost } from "./components/ToastHost";
 import { TopBar } from "./components/TopBar";
 import { VariablesModal } from "./components/VariablesModal";
@@ -27,7 +30,8 @@ export function App() {
     sidebarOpen,
     layout,
     splitRatio,
-    editor,
+    stackRatio,
+    hasEditor,
     running,
     boot,
     newDraft,
@@ -37,10 +41,30 @@ export function App() {
     copyCurl,
     importCurl,
     set,
-  } = useStore();
+  } = useStore(
+    useShallow((s) => ({
+      booted: s.booted,
+      theme: s.theme,
+      sidebarOpen: s.sidebarOpen,
+      layout: s.layout,
+      splitRatio: s.splitRatio,
+      stackRatio: s.stackRatio,
+      hasEditor: Boolean(s.editor),
+      running: s.running,
+      boot: s.boot,
+      newDraft: s.newDraft,
+      sendRequest: s.sendRequest,
+      saveEditor: s.saveEditor,
+      cancelRequest: s.cancelRequest,
+      copyCurl: s.copyCurl,
+      importCurl: s.importCurl,
+      set: s.set,
+    })),
+  );
 
-  const [wide, setWide] = useState(() => typeof window !== "undefined" && window.innerWidth >= 1120);
-  const dragging = useRef(false);
+  const [wide, setWide] = useState(() => typeof window !== "undefined" && window.innerWidth >= 1040);
+  const [draggingAxis, setDraggingAxis] = useState<"h" | "v" | null>(null);
+  const draggingRef = useRef<"h" | "v" | null>(null);
   const splitContainer = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -48,7 +72,7 @@ export function App() {
   }, [boot]);
 
   useEffect(() => {
-    const onResize = () => setWide(window.innerWidth >= 1120);
+    const onResize = () => setWide(window.innerWidth >= 1040);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -124,15 +148,21 @@ export function App() {
 
   useEffect(() => {
     const onMove = (event: MouseEvent) => {
-      if (!dragging.current || !splitContainer.current) return;
+      const axis = draggingRef.current;
+      if (!axis || !splitContainer.current) return;
       const rect = splitContainer.current.getBoundingClientRect();
-      if (rect.width <= 0) return;
-      const ratio = (event.clientX - rect.left) / rect.width;
-      set({ splitRatio: Math.min(0.76, Math.max(0.24, ratio)) });
+      if (axis === "v" && rect.width > 0) {
+        const ratio = (event.clientX - rect.left) / rect.width;
+        set({ splitRatio: Math.min(0.75, Math.max(0.25, ratio)) });
+      } else if (axis === "h" && rect.height > 0) {
+        const ratio = (event.clientY - rect.top) / rect.height;
+        set({ stackRatio: Math.min(0.75, Math.max(0.25, ratio)) });
+      }
     };
     const onUp = () => {
-      if (!dragging.current) return;
-      dragging.current = false;
+      if (!draggingRef.current) return;
+      draggingRef.current = null;
+      setDraggingAxis(null);
       document.body.style.cursor = "";
     };
     window.addEventListener("mousemove", onMove);
@@ -143,65 +173,67 @@ export function App() {
     };
   }, [set]);
 
+  const startDrag = (axis: "h" | "v") => {
+    draggingRef.current = axis;
+    setDraggingAxis(axis);
+    document.body.style.cursor = axis === "v" ? "col-resize" : "row-resize";
+  };
+
   const sideBySide = layout === "split" && wide;
 
   return (
     <TooltipProvider>
-      <div className="flex h-full w-full flex-col overflow-hidden bg-frame text-ink">
+      <div className="flex h-full w-full flex-col overflow-hidden bg-canvas text-ink">
         <TopBar />
 
         {!booted ? (
           <WorkspaceBootSkeleton sidebarOpen={sidebarOpen} />
         ) : (
-          <div className="flex min-h-0 flex-1 px-2.5 pb-2.5">
+          <div className="flex min-h-0 flex-1 overflow-hidden">
             <div
               aria-hidden={!sidebarOpen}
               className={cx(
-                "shrink-0 overflow-hidden transition-[width,margin,opacity] duration-220 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                sidebarOpen ? "mr-2.5 w-[258px] opacity-100" : "pointer-events-none mr-0 w-0 opacity-0",
+                "shrink-0 overflow-hidden transition-[width] duration-150 ease-out",
+                sidebarOpen ? "w-[252px]" : "pointer-events-none w-0",
               )}
             >
-              <div
-                className={cx(
-                  "flex h-full w-[258px] transition-transform duration-220 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                  sidebarOpen ? "translate-x-0" : "-translate-x-3",
-                )}
-              >
-                <Navigator />
-              </div>
+              <Navigator />
             </div>
 
-            <main key={editor ? "workbench" : "overview"} className="anim-fade-up flex min-w-0 flex-1 flex-col">
-              {!editor ? (
+            <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-canvas">
+              {!hasEditor ? (
                 <WorkspaceOverview />
               ) : (
-                <div ref={splitContainer} className="flex min-h-0 flex-1 flex-col">
+                <div ref={splitContainer} className="flex min-h-0 flex-1 overflow-hidden">
                   {sideBySide ? (
-                    <div className="flex min-h-0 flex-1">
-                      <div className="flex min-w-0 flex-col" style={{ width: `${splitRatio * 100}%` }}>
+                    <div className="flex min-h-0 flex-1 overflow-hidden">
+                      <div className="flex min-w-0 flex-col overflow-hidden" style={{ width: `${splitRatio * 100}%` }}>
                         <RequestWorkbench />
                       </div>
                       <div
                         role="separator"
                         aria-orientation="vertical"
-                        onMouseDown={() => {
-                          dragging.current = true;
-                          document.body.style.cursor = "col-resize";
-                        }}
-                        className="group flex w-2.5 shrink-0 cursor-col-resize items-center justify-center"
-                      >
-                        <span className="motion h-10 w-[3px] rounded-full bg-line group-hover:h-16 group-hover:bg-cobalt/60" />
-                      </div>
-                      <div className="flex min-w-0 flex-1 flex-col">
+                        data-dragging={draggingAxis === "v"}
+                        onMouseDown={() => startDrag("v")}
+                        className="pane-splitter-v"
+                      />
+                      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
                         <ResponseInspector />
                       </div>
                     </div>
                   ) : (
-                    <div className="flex min-h-0 flex-1 flex-col gap-2.5">
-                      <div className="flex min-h-[45%] flex-1 flex-col">
+                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                      <div className="flex min-h-0 flex-col overflow-hidden" style={{ height: `${stackRatio * 100}%` }}>
                         <RequestWorkbench />
                       </div>
-                      <div className="flex min-h-[38%] flex-1 flex-col">
+                      <div
+                        role="separator"
+                        aria-orientation="horizontal"
+                        data-dragging={draggingAxis === "h"}
+                        onMouseDown={() => startDrag("h")}
+                        className="pane-splitter-h"
+                      />
+                      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                         <ResponseInspector />
                       </div>
                     </div>
@@ -212,9 +244,12 @@ export function App() {
           </div>
         )}
 
+        <StatusBar />
+
         <CommandPalette />
         <VariablesModal />
         <CurlImportModal />
+        <ConfirmDeleteModal />
         <ToastHost />
       </div>
     </TooltipProvider>

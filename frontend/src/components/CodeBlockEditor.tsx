@@ -1,6 +1,6 @@
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { json } from "@codemirror/lang-json";
-import { EditorState } from "@codemirror/state";
+import { Compartment, EditorState } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { tags } from "@lezer/highlight";
@@ -11,16 +11,16 @@ const editorTheme = EditorView.theme({
     height: "100%",
     backgroundColor: "transparent",
     color: "var(--ink-1)",
-    fontSize: "12.5px",
+    fontSize: "12px",
   },
   ".cm-content": {
-    padding: "10px 0",
+    padding: "8px 0",
     fontFamily: "var(--font-mono)",
     lineHeight: "1.6",
-    caretColor: "var(--cobalt)",
+    caretColor: "var(--accent-text)",
   },
   ".cm-line": {
-    padding: "0 12px 0 8px",
+    padding: "0 12px 0 10px",
   },
   "&.cm-focused": {
     outline: "none",
@@ -45,14 +45,19 @@ export function CodeBlockEditor({
   onChange,
   readOnly = false,
   language = true,
+  lineWrap = false,
 }: {
   value: string;
   onChange?: (next: string) => void;
   readOnly?: boolean;
   language?: boolean;
+  lineWrap?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
+  const wrapCompartment = useRef(new Compartment());
+  const readOnlyCompartment = useRef(new Compartment());
+  const langCompartment = useRef(new Compartment());
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
@@ -66,9 +71,12 @@ export function CodeBlockEditor({
         keymap.of([...defaultKeymap, ...historyKeymap]),
         editorTheme,
         syntaxHighlighting(tokenHighlight),
-        ...(language ? [json()] : []),
-        EditorState.readOnly.of(readOnly),
-        EditorView.editable.of(!readOnly),
+        langCompartment.current.of(language ? json() : []),
+        wrapCompartment.current.of(lineWrap ? EditorView.lineWrapping : []),
+        readOnlyCompartment.current.of([
+          EditorState.readOnly.of(readOnly),
+          EditorView.editable.of(!readOnly),
+        ]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             onChangeRef.current?.(update.state.doc.toString());
@@ -82,9 +90,36 @@ export function CodeBlockEditor({
       instance.destroy();
       view.current = null;
     };
-    // Document string updates are synced incrementally below.
+    // Configuration changes are applied cleanly via Compartments below without destroying the view.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readOnly, language]);
+  }, []);
+
+  useEffect(() => {
+    const instance = view.current;
+    if (!instance) return;
+    instance.dispatch({
+      effects: wrapCompartment.current.reconfigure(lineWrap ? EditorView.lineWrapping : []),
+    });
+  }, [lineWrap]);
+
+  useEffect(() => {
+    const instance = view.current;
+    if (!instance) return;
+    instance.dispatch({
+      effects: readOnlyCompartment.current.reconfigure([
+        EditorState.readOnly.of(readOnly),
+        EditorView.editable.of(!readOnly),
+      ]),
+    });
+  }, [readOnly]);
+
+  useEffect(() => {
+    const instance = view.current;
+    if (!instance) return;
+    instance.dispatch({
+      effects: langCompartment.current.reconfigure(language ? json() : []),
+    });
+  }, [language]);
 
   useEffect(() => {
     const instance = view.current;
@@ -94,5 +129,5 @@ export function CodeBlockEditor({
     }
   }, [value]);
 
-  return <div ref={host} className="h-full min-h-0 w-full" />;
+  return <div ref={host} className="h-full min-h-0 w-full bg-canvas" />;
 }

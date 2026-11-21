@@ -16,22 +16,29 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { clockTime, prettyBody, suggestApiId } from "../lib/format";
 import type { KV } from "../lib/types";
 import { useStore } from "../store";
 import { CodeBlockEditor } from "./CodeBlockEditor";
 import { KVTable } from "./KVTable";
 import { OmniUrlBar } from "./OmniUrlBar";
-import { ActorTag, Button, cx, IconButton, Kbd, SegmentedTabs, SwapText, Tip } from "./Primitives";
+import { ActorTag, Button, cx, IconButton, Kbd, SwapText, Tip, UnderlineTabs } from "./Primitives";
 import { VarField } from "./VarField";
 import { BodyNoneState, Spinner } from "./VisualStates";
 
 const BODY_TYPES = [
+  { id: "none", label: "None", hint: "No request payload" },
+  { id: "json", label: "application/json", short: "JSON" },
+  { id: "form", label: "multipart/form-data", short: "Form" },
+  { id: "urlencoded", label: "application/x-www-form-urlencoded", short: "URL Encoded" },
+  { id: "raw", label: "text/plain", short: "Raw" },
+] as const;
+
+const AUTH_TYPES = [
   { id: "none", label: "None" },
-  { id: "json", label: "JSON" },
-  { id: "form", label: "Form" },
-  { id: "urlencoded", label: "URL Encoded" },
-  { id: "raw", label: "Raw" },
+  { id: "bearer", label: "Bearer Token" },
+  { id: "basic", label: "Basic Auth" },
 ] as const;
 
 const activeCount = (rows?: KV[]): number =>
@@ -66,13 +73,30 @@ export function RequestWorkbench() {
     savePopoverOpen,
     patchEditor,
     saveEditor,
-    deleteApi,
     copyCurl,
     closeSnapshot,
     applySnapshotToEditor,
     closeEditor,
     set,
-  } = useStore();
+  } = useStore(
+    useShallow((s) => ({
+      editor: s.editor,
+      dirty: s.dirty,
+      saving: s.saving,
+      selectedId: s.selectedId,
+      snapshot: s.snapshot,
+      composerTab: s.composerTab,
+      layout: s.layout,
+      savePopoverOpen: s.savePopoverOpen,
+      patchEditor: s.patchEditor,
+      saveEditor: s.saveEditor,
+      copyCurl: s.copyCurl,
+      closeSnapshot: s.closeSnapshot,
+      applySnapshotToEditor: s.applySnapshotToEditor,
+      closeEditor: s.closeEditor,
+      set: s.set,
+    })),
+  );
 
   if (!editor) return null;
 
@@ -82,19 +106,22 @@ export function RequestWorkbench() {
   const headerCount = activeCount(editor.headers);
   const isAgentEdited = editor.meta?.updated_by === "agent";
 
+  const currentBodyType = BODY_TYPES.find((t) => t.id === body.type) ?? BODY_TYPES[0];
+  const currentAuthType = AUTH_TYPES.find((t) => t.id === (auth.type || "none")) ?? AUTH_TYPES[0];
+
   return (
-    <section className="island flex min-h-0 flex-1 flex-col overflow-hidden">
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-canvas">
       {/* Snapshot Banner when inspecting historical execution */}
       {snapshot && (
-        <div className="anim-slide-down flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-violet/20 bg-violet-soft/60 px-3.5 py-2 text-[12px]">
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-violet/25 bg-violet-soft px-3 py-1.5 text-[11.5px]">
           <div className="flex items-center gap-2">
-            <ActorTag actor={snapshot.actor} />
+            <ActorTag actor={snapshot.actor} size="xs" />
             <span className="text-ink">
-              Snapshot from <span className="mono font-medium">{clockTime(snapshot.ts)}</span>
+              Historical snapshot from <span className="mono font-semibold">{clockTime(snapshot.ts)}</span>
               {snapshot.env ? (
                 <>
                   {" "}
-                  in <span className="mono font-medium">{snapshot.env}</span>
+                  in <span className="mono font-semibold">{snapshot.env}</span>
                 </>
               ) : null}
             </span>
@@ -105,14 +132,14 @@ export function RequestWorkbench() {
             </Button>
             <Button size="xs" variant="ghost" onClick={closeSnapshot}>
               <X className="h-3 w-3" />
-              <span>Exit Snapshot</span>
+              <span>Exit</span>
             </Button>
           </div>
         </div>
       )}
 
-      {/* Identity & Actions Strip */}
-      <div className="flex min-h-[52px] shrink-0 items-center gap-2 px-3.5 py-1.5">
+      {/* Compact Identity & Actions Header */}
+      <div className="flex h-[38px] shrink-0 items-center justify-between gap-2 border-b border-line bg-chrome/60 px-3">
         <IdentityPopover
           open={savePopoverOpen}
           onOpenChange={(open) => set({ savePopoverOpen: open })}
@@ -126,31 +153,28 @@ export function RequestWorkbench() {
           onSave={saveEditor}
         />
 
-        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1.5">
           <Button
-            size="sm"
+            size="xs"
             variant={dirty ? "primary" : "secondary"}
             disabled={saving}
             onClick={() => void saveEditor()}
             title="Save endpoint (⌘S)"
+            className="h-[26px] px-2.5 text-[11.5px]"
           >
-            {saving ? <Spinner className="h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" strokeWidth={2} />}
-            <SwapText value={saving ? "Saving…" : dirty ? "Save" : "Saved"} options={["Save", "Saved", "Saving…"]} />
-            {/* Kept mounted while idle so the shortcut chip cannot resize the button. */}
-            <Kbd className={cx("border-white/25 bg-white/15 text-white", !(dirty && !saving) && "invisible")}>
-              ⌘S
-            </Kbd>
+            {saving ? <Spinner className="h-3 w-3" /> : <Save className="h-3 w-3" strokeWidth={2} />}
+            <SwapText value={saving ? "Saving…" : dirty ? "Save" : "Saved"} options={["Save", "Saved"]} />
           </Button>
 
           {/* Unified Import / Export cURL control */}
-          <div className="inline-flex h-[28px] shrink-0 items-center divide-x divide-line overflow-hidden rounded-[8px] border border-line bg-surface shadow-2xs">
+          <div className="inline-flex h-[26px] shrink-0 items-center divide-x divide-line overflow-hidden rounded border border-line bg-canvas">
             <Tip label="Import cURL command (⌘V)">
               <button
                 type="button"
                 onClick={() => set({ curlModalOpen: true })}
-                className="motion inline-flex h-full items-center gap-1.5 px-2.5 text-[12px] font-medium text-ink2 hover:bg-subtle hover:text-ink"
+                className="motion inline-flex h-full items-center gap-1 px-2 text-[11.5px] font-medium text-ink2 hover:bg-subtle hover:text-ink"
               >
-                <ArrowDownToLine className="h-3.5 w-3.5 text-ink3" strokeWidth={1.9} />
+                <ArrowDownToLine className="h-3 w-3 text-ink3" strokeWidth={1.9} />
                 <span>Import</span>
               </button>
             </Tip>
@@ -160,19 +184,19 @@ export function RequestWorkbench() {
                 <button
                   type="button"
                   title="Export as cURL (⌘⇧C)"
-                  className="motion inline-flex h-full items-center gap-1.5 px-2.5 text-[12px] font-medium text-ink2 hover:bg-subtle hover:text-ink"
+                  className="motion inline-flex h-full items-center gap-1 px-2 text-[11.5px] font-medium text-ink2 hover:bg-subtle hover:text-ink"
                 >
-                  <ArrowUpFromLine className="h-3.5 w-3.5 text-ink3" strokeWidth={1.9} />
+                  <ArrowUpFromLine className="h-3 w-3 text-ink3" strokeWidth={1.9} />
                   <span>Export</span>
                   <ChevronDown className="h-3 w-3 text-ink3" strokeWidth={2} />
                 </button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
-                <DropdownMenu.Content align="end" sideOffset={6} className="floating-surface floating-pop z-50 min-w-[250px] rounded-[12px] p-1.5">
-                  <DropdownMenu.Label className="eyebrow px-2.5 py-1">Export as cURL</DropdownMenu.Label>
+                <DropdownMenu.Content align="end" sideOffset={6} className="popover-surface floating-pop z-50 min-w-[240px] rounded-lg p-1.5">
+                  <DropdownMenu.Label className="eyebrow px-2 py-1">Export as cURL</DropdownMenu.Label>
                   <DropdownMenu.Item
                     onSelect={() => void copyCurl(false)}
-                    className="motion flex cursor-default items-center justify-between gap-2 rounded-[8px] px-2.5 py-1.5 text-[12px] font-medium text-ink outline-none data-[highlighted]:bg-muted"
+                    className="motion flex cursor-default items-center justify-between gap-2 rounded-md px-2 py-1.5 text-[12px] font-medium text-ink outline-none data-[highlighted]:bg-subtle"
                   >
                     <span className="inline-flex items-center gap-2">
                       <ArrowUpFromLine className="h-3.5 w-3.5 text-ink3" />
@@ -182,7 +206,7 @@ export function RequestWorkbench() {
                   </DropdownMenu.Item>
                   <DropdownMenu.Item
                     onSelect={() => void copyCurl(true)}
-                    className="motion flex cursor-default items-center gap-2 rounded-[8px] px-2.5 py-1.5 text-[12px] text-ink2 outline-none data-[highlighted]:bg-muted data-[highlighted]:text-ink"
+                    className="motion flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-ink2 outline-none data-[highlighted]:bg-subtle data-[highlighted]:text-ink"
                   >
                     <ArrowUpFromLine className="h-3.5 w-3.5 text-ink3" />
                     <span>With resolved values</span>
@@ -194,15 +218,15 @@ export function RequestWorkbench() {
 
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <IconButton variant="secondary" title="More options">
-                <MoreHorizontal className="h-4 w-4" />
+              <IconButton size="xs" variant="secondary" title="More options" className="h-[26px] w-[26px]">
+                <MoreHorizontal className="h-3.5 w-3.5" />
               </IconButton>
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
-              <DropdownMenu.Content align="end" sideOffset={6} className="floating-surface floating-pop z-50 min-w-[210px] rounded-[12px] p-1.5">
+              <DropdownMenu.Content align="end" sideOffset={6} className="popover-surface floating-pop z-50 min-w-[205px] rounded-lg p-1.5">
                 <DropdownMenu.Item
                   onSelect={() => set({ layout: layout === "split" ? "stack" : "split" })}
-                  className="motion flex cursor-default items-center gap-2 rounded-[8px] px-2.5 py-1.5 text-[12px] text-ink outline-none data-[highlighted]:bg-muted"
+                  className="motion flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-ink outline-none data-[highlighted]:bg-subtle"
                 >
                   {layout === "split" ? (
                     <Rows2 className="h-3.5 w-3.5 text-ink3" />
@@ -213,7 +237,7 @@ export function RequestWorkbench() {
                 </DropdownMenu.Item>
                 <DropdownMenu.Item
                   onSelect={closeEditor}
-                  className="motion flex cursor-default items-center gap-2 rounded-[8px] px-2.5 py-1.5 text-[12px] text-ink outline-none data-[highlighted]:bg-muted"
+                  className="motion flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-ink outline-none data-[highlighted]:bg-subtle"
                 >
                   <LayoutGrid className="h-3.5 w-3.5 text-ink3" />
                   <span>Back to workspace overview</span>
@@ -222,11 +246,11 @@ export function RequestWorkbench() {
                   <>
                     <DropdownMenu.Separator className="my-1 h-px bg-line" />
                     <DropdownMenu.Item
-                      onSelect={() => void deleteApi(selectedId)}
-                      className="motion flex cursor-default items-center gap-2 rounded-[8px] px-2.5 py-1.5 text-[12px] text-rose outline-none data-[highlighted]:bg-rose-soft"
+                      onSelect={() => set({ confirmDeleteId: selectedId })}
+                      className="motion flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-rose outline-none data-[highlighted]:bg-rose-soft"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
-                      <span>Delete endpoint</span>
+                      <span>Delete endpoint…</span>
                     </DropdownMenu.Item>
                   </>
                 )}
@@ -236,44 +260,39 @@ export function RequestWorkbench() {
         </div>
       </div>
 
-      {/* Unified Omni URL Capsule */}
+      {/* Unified Request Bar */}
       <OmniUrlBar />
 
-      {/* Composer Section Tabs */}
-      <div className="flex h-[40px] shrink-0 items-center justify-between border-y border-line bg-subtle/45 px-3.5">
-        <SegmentedTabs
+      {/* Flat Underline Section Tabs */}
+      <div className="flex h-[36px] shrink-0 items-center justify-between border-b border-line bg-canvas px-3">
+        <UnderlineTabs
           value={composerTab}
           onChange={(tab) => set({ composerTab: tab })}
           items={[
-            { id: "params", label: "Params", badge: queryCount > 0 ? queryCount : undefined },
-            { id: "headers", label: "Headers", badge: headerCount > 0 ? headerCount : undefined },
+            { id: "params", label: "Parameters", badge: queryCount > 0 ? queryCount : undefined },
             {
               id: "body",
               label: "Body",
-              badge:
-                body.type !== "none" ? (
-                  <span className="uppercase">{body.type}</span>
-                ) : undefined,
+              badge: body.type !== "none" ? body.type.toUpperCase() : undefined,
             },
+            { id: "headers", label: "Headers", badge: headerCount > 0 ? headerCount : undefined },
             {
               id: "auth",
-              label: "Auth",
-              badge:
-                auth.type !== "none" ? (
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-violet" />
-                ) : undefined,
+              label: "Authorization",
+              indicator: auth.type !== "none",
             },
           ]}
         />
       </div>
 
       {/* Active Composer Body */}
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {composerTab === "params" && (
           <KVTable
+            title="Query Parameters"
             rows={editor.query ?? []}
             onChange={(query) => patchEditor((doc) => ({ ...doc, query }))}
-            keyPlaceholder="Query parameter"
+            keyPlaceholder="Parameter name"
             valuePlaceholder="Value or {{variable}}"
             emptyHint="Add URL query parameters or variables like {{page_cursor}}."
           />
@@ -281,6 +300,7 @@ export function RequestWorkbench() {
 
         {composerTab === "headers" && (
           <KVTable
+            title="Header List"
             rows={editor.headers ?? []}
             onChange={(headers) => patchEditor((doc) => ({ ...doc, headers }))}
             keyPlaceholder="Header name"
@@ -291,23 +311,53 @@ export function RequestWorkbench() {
 
         {composerTab === "body" && (
           <div className="flex min-h-0 flex-1 flex-col">
-            <div className="flex h-[38px] shrink-0 items-center justify-between border-b border-line bg-surface px-3.5">
-              <SegmentedTabs
-                size="xs"
-                value={body.type as (typeof BODY_TYPES)[number]["id"]}
-                onChange={(type) =>
-                  patchEditor((doc) => ({
-                    ...doc,
-                    body: { type, content: doc.body?.content ?? "" },
-                  }))
-                }
-                items={BODY_TYPES.map((t) => ({ id: t.id, label: t.label }))}
-              />
+            {/* Hoppscotch-style compact Content-Type dropdown toolbar (never overflows in narrow split panes) */}
+            <div className="flex h-[32px] shrink-0 items-center justify-between gap-2 border-b border-line bg-chrome/60 px-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="shrink-0 text-[11.5px] font-semibold text-ink2">Content Type</span>
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <button
+                      type="button"
+                      className="motion inline-flex h-[22px] max-w-[230px] items-center gap-1.5 rounded border border-line bg-canvas px-2 text-[11.5px] font-medium text-ink hover:border-line-strong hover:bg-subtle"
+                    >
+                      <span className="truncate mono text-[11px]">{currentBodyType.label}</span>
+                      <ChevronDown className="h-3 w-3 shrink-0 text-ink3" strokeWidth={2} />
+                    </button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content align="start" sideOffset={5} className="popover-surface floating-pop z-50 min-w-[240px] rounded-lg p-1">
+                      {BODY_TYPES.map((t) => {
+                        const active = body.type === t.id;
+                        return (
+                          <DropdownMenu.Item
+                            key={t.id}
+                            onSelect={() =>
+                              patchEditor((doc) => ({
+                                ...doc,
+                                body: { type: t.id, content: doc.body?.content ?? "" },
+                              }))
+                            }
+                            className={cx(
+                              "motion flex cursor-default items-center justify-between gap-3 rounded-md px-2.5 py-1.5 text-[12px] outline-none data-[highlighted]:bg-subtle",
+                              active ? "font-semibold text-ink" : "text-ink2",
+                            )}
+                          >
+                            <span className="mono text-[11.5px]">{t.label}</span>
+                            {active && <Check className="h-3.5 w-3.5 shrink-0 text-accent-text" strokeWidth={2.2} />}
+                          </DropdownMenu.Item>
+                        );
+                      })}
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              </div>
+
               {body.type === "json" && (
                 <Tip label="Format JSON payload">
                   <Button
                     size="xs"
-                    variant="secondary"
+                    variant="ghost"
                     onClick={() => {
                       const { text, json } = prettyBody(body.content);
                       if (json) {
@@ -322,7 +372,7 @@ export function RequestWorkbench() {
               )}
             </div>
 
-            <div className="min-h-0 flex-1">
+            <div className="min-h-0 flex-1 overflow-hidden">
               {body.type === "none" ? (
                 <BodyNoneState
                   onSelectJson={() =>
@@ -369,87 +419,123 @@ export function RequestWorkbench() {
 
         {composerTab === "auth" && (
           <div className="flex min-h-0 flex-1 flex-col">
-            <div className="flex h-[38px] shrink-0 items-center justify-between border-b border-line bg-surface px-3.5">
-              <SegmentedTabs
-                size="xs"
-                value={(auth.type || "none") as "none" | "bearer" | "basic"}
-                onChange={(nextType) =>
-                  patchEditor((doc) => ({
-                    ...doc,
-                    auth:
-                      nextType === "bearer"
-                        ? { type: "bearer", token: doc.auth?.token || "{{api_key}}" }
-                        : nextType === "basic"
-                          ? {
-                              type: "basic",
-                              username: doc.auth?.username || "",
-                              password: doc.auth?.password || "",
-                            }
-                          : { type: "none" },
-                  }))
-                }
-                items={[
-                  { id: "none", label: "No Auth" },
-                  { id: "bearer", label: "Bearer Token" },
-                  { id: "basic", label: "Basic Auth" },
-                ]}
-              />
+            <div className="flex h-[32px] shrink-0 items-center gap-2 border-b border-line bg-chrome/60 px-3">
+              <span className="shrink-0 text-[11.5px] font-semibold text-ink2">Auth Type</span>
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <button
+                    type="button"
+                    className="motion inline-flex h-[22px] items-center gap-1.5 rounded border border-line bg-canvas px-2 text-[11.5px] font-medium text-ink hover:border-line-strong hover:bg-subtle"
+                  >
+                    <span>{currentAuthType.label}</span>
+                    <ChevronDown className="h-3 w-3 shrink-0 text-ink3" strokeWidth={2} />
+                  </button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content align="start" sideOffset={5} className="popover-surface floating-pop z-50 min-w-[165px] rounded-lg p-1">
+                    {AUTH_TYPES.map((t) => {
+                      const active = (auth.type || "none") === t.id;
+                      return (
+                        <DropdownMenu.Item
+                          key={t.id}
+                          onSelect={() =>
+                            patchEditor((doc) => ({
+                              ...doc,
+                              auth:
+                                t.id === "bearer"
+                                  ? { type: "bearer", token: doc.auth?.token || "{{api_key}}" }
+                                  : t.id === "basic"
+                                    ? {
+                                        type: "basic",
+                                        username: doc.auth?.username || "",
+                                        password: doc.auth?.password || "",
+                                      }
+                                    : { type: "none" },
+                            }))
+                          }
+                          className={cx(
+                            "motion flex cursor-default items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-[12px] outline-none data-[highlighted]:bg-subtle",
+                            active ? "font-semibold text-ink" : "text-ink2",
+                          )}
+                        >
+                          <span>{t.label}</span>
+                          {active && <Check className="h-3.5 w-3.5 shrink-0 text-accent-text" strokeWidth={2.2} />}
+                        </DropdownMenu.Item>
+                      );
+                    })}
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
             </div>
 
-            <div className="scroll flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
-
-            {auth.type === "bearer" && (
-              <div className="max-w-[540px] space-y-1.5 rounded-[12px] border border-line bg-subtle/50 p-3.5">
-                <div className="eyebrow flex items-center gap-1.5">
-                  <KeyRound className="h-3 w-3 text-violet" />
-                  <span>Bearer Token</span>
+            <div className="scroll flex min-h-0 flex-1 flex-col overflow-y-auto">
+              {auth.type === "none" && (
+                <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
+                  <div className="text-[12.5px] font-medium text-ink2">This request does not use authorization</div>
+                  <p className="mt-1 max-w-[300px] text-[11.5px] text-ink3">
+                    Select Bearer Token or Basic Auth above to generate an <span className="mono">Authorization</span> header at runtime.
+                  </p>
                 </div>
-                <div className="flex h-[34px] items-center rounded-[8px] border border-line bg-surface">
-                  <VarField
-                    value={auth.token ?? ""}
-                    onChange={(token) =>
-                      patchEditor((doc) => ({ ...doc, auth: { ...doc.auth, token } }))
-                    }
-                    placeholder="{{api_key}}"
-                  />
+              )}
+
+              {auth.type === "bearer" && (
+                <div className="border-b border-line-subtle">
+                  <div className="flex h-[36px] items-center border-b border-line-subtle px-3">
+                    <label className="flex w-[104px] shrink-0 items-center gap-1.5 text-[12px] font-medium text-ink2">
+                      <KeyRound className="h-3.5 w-3.5 text-violet" />
+                      <span>Token</span>
+                    </label>
+                    <div className="flex h-full min-w-0 flex-1 items-center border-l border-line-subtle">
+                      <VarField
+                        value={auth.token ?? ""}
+                        expandOnFocus
+                        onChange={(token) =>
+                          patchEditor((doc) => ({ ...doc, auth: { ...doc.auth, token } }))
+                        }
+                        placeholder="{{api_key}}"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {auth.type === "basic" && (
-              <div className="max-w-[540px] space-y-3 rounded-[12px] border border-line bg-subtle/50 p-3.5">
-                <label className="block space-y-1">
-                  <span className="eyebrow">Username</span>
-                  <div className="flex h-[34px] items-center rounded-[8px] border border-line bg-surface">
-                    <VarField
-                      value={auth.username ?? ""}
-                      onChange={(username) =>
-                        patchEditor((doc) => ({ ...doc, auth: { ...doc.auth, username } }))
-                      }
-                      placeholder="{{basic_user}}"
-                    />
+              {auth.type === "basic" && (
+                <div className="border-b border-line-subtle">
+                  <div className="flex h-[36px] items-center border-b border-line-subtle px-3">
+                    <label className="w-[104px] shrink-0 text-[12px] font-medium text-ink2">Username</label>
+                    <div className="flex h-full min-w-0 flex-1 items-center border-l border-line-subtle">
+                      <VarField
+                        value={auth.username ?? ""}
+                        expandOnFocus
+                        onChange={(username) =>
+                          patchEditor((doc) => ({ ...doc, auth: { ...doc.auth, username } }))
+                        }
+                        placeholder="{{basic_user}}"
+                      />
+                    </div>
                   </div>
-                </label>
-                <label className="block space-y-1">
-                  <span className="eyebrow">Password</span>
-                  <div className="flex h-[34px] items-center rounded-[8px] border border-line bg-surface">
-                    <VarField
-                      value={auth.password ?? ""}
-                      onChange={(password) =>
-                        patchEditor((doc) => ({ ...doc, auth: { ...doc.auth, password } }))
-                      }
-                      placeholder="{{basic_pass}}"
-                    />
+                  <div className="flex h-[36px] items-center px-3">
+                    <label className="w-[104px] shrink-0 text-[12px] font-medium text-ink2">Password</label>
+                    <div className="flex h-full min-w-0 flex-1 items-center border-l border-line-subtle">
+                      <VarField
+                        value={auth.password ?? ""}
+                        expandOnFocus
+                        onChange={(password) =>
+                          patchEditor((doc) => ({ ...doc, auth: { ...doc.auth, password } }))
+                        }
+                        placeholder="{{basic_pass}}"
+                      />
+                    </div>
                   </div>
-                </label>
-              </div>
-            )}
+                </div>
+              )}
 
-            <p className="max-w-[540px] text-[11.5px] leading-relaxed text-ink3">
-              Auth generates the <span className="mono text-ink2">Authorization</span> header at runtime. Keep secrets in
-              the OS keychain via <span className="mono text-ink2">{"{{api_key}}"}</span> so they stay redacted across
-              YAML and execution logs.
-            </p>
+              {auth.type !== "none" && (
+                <p className="max-w-[520px] px-3.5 py-3 text-[11.5px] leading-relaxed text-ink3">
+                  Authorization is injected as a request header at execution time. Store credentials in the OS keychain via{" "}
+                  <span className="mono text-ink2">{"{{api_key}}"}</span> so secrets stay redacted in YAML files and logs.
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -491,6 +577,11 @@ function IdentityPopover({
   }, [open, editorId, editorName, editorUrl, editorMethod]);
 
   const cleanId = editorId.trim();
+  const titleHint = cleanId
+    ? editorName && editorName !== cleanId
+      ? `${editorName} (${cleanId})`
+      : cleanId
+    : "Click to name & save endpoint";
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -502,39 +593,33 @@ function IdentityPopover({
       <Popover.Trigger asChild>
         <button
           type="button"
-          title="Edit endpoint ID & title"
-          className="motion -ml-1.5 flex min-w-0 flex-1 flex-col items-start justify-center rounded-[9px] px-2 py-1 text-left hover:bg-subtle"
+          title={titleHint}
+          className="motion -ml-1.5 flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1 text-left hover:bg-subtle"
         >
-          <div className="flex w-full min-w-0 items-center gap-1.5">
-            <span
-              className={cx(
-                "truncate text-[14px] font-bold leading-tight tracking-[-0.015em]",
-                editorName || cleanId ? "text-ink" : "text-ink3",
-              )}
-            >
-              {editorName || cleanId || "Untitled Request"}
-            </span>
-            {dirty && (
-              <span
-                className="h-2 w-2 shrink-0 rounded-full bg-amber"
-                title="Unsaved changes"
-              />
+          <span
+            className={cx(
+              "truncate text-[12.5px] font-semibold tracking-[-0.01em]",
+              editorName || cleanId ? "text-ink" : "text-ink3",
             )}
-          </div>
-          {(cleanId || isAgentEdited) && (
-            <div className="mt-0.5 flex w-full min-w-0 items-center gap-1.5">
-              {cleanId && (
-                <span className="truncate mono text-[10.5px] font-medium text-ink3">
-                  {cleanId}
-                </span>
-              )}
-              {isAgentEdited && <ActorTag actor="agent" size="xs" />}
-            </div>
+          >
+            {editorName || cleanId || "Untitled Request"}
+          </span>
+          {dirty && (
+            <span
+              className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber"
+              title="Unsaved changes"
+            />
           )}
+          {cleanId && editorName && editorName !== cleanId && (
+            <span className="hidden truncate mono text-[11px] text-ink3 sm:inline">
+              {cleanId}
+            </span>
+          )}
+          {isAgentEdited && <ActorTag actor="agent" size="xs" />}
         </button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content side="bottom" align="start" sideOffset={8} className="floating-surface floating-pop z-50 w-[360px] rounded-[13px] p-3.5">
+        <Popover.Content side="bottom" align="start" sideOffset={6} className="popover-surface floating-pop z-50 w-[350px] rounded-lg p-3.5">
           <form onSubmit={submit} className="space-y-3">
             <div>
               <div className="eyebrow mb-1">Endpoint ID</div>
@@ -544,7 +629,7 @@ function IdentityPopover({
                 onChange={(e) => setDraftId(e.target.value)}
                 placeholder="orders/refund"
                 spellCheck={false}
-                className="h-[32px] w-full rounded-[8px] border border-line bg-subtle px-2.5 mono text-[12px] text-ink placeholder:text-ink3 focus:border-cobalt/50 focus:bg-surface"
+                className="h-[32px] w-full rounded-md border border-line-strong bg-subtle px-2.5 mono text-[12px] text-ink placeholder:text-ink3 focus:border-accent focus:bg-canvas"
               />
             </div>
 
@@ -555,7 +640,7 @@ function IdentityPopover({
                 onChange={(e) => setDraftName(e.target.value)}
                 placeholder="Refund an order"
                 spellCheck={false}
-                className="h-[32px] w-full rounded-[8px] border border-line bg-subtle px-2.5 text-[12.5px] text-ink placeholder:text-ink3 focus:border-cobalt/50 focus:bg-surface"
+                className="h-[32px] w-full rounded-md border border-line-strong bg-subtle px-2.5 text-[12.5px] text-ink placeholder:text-ink3 focus:border-accent focus:bg-canvas"
               />
             </div>
 

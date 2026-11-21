@@ -1,5 +1,6 @@
-import { Check, Copy, Sparkles } from "lucide-react";
+import { Check, Copy, Sparkles, WrapText } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { contentType, prettyBody, relativeTime, splitBytes, splitDuration } from "../lib/format";
 import type { RunView, Timings } from "../lib/types";
 import { useStore } from "../store";
@@ -10,11 +11,13 @@ import {
   Button,
   cx,
   EnvCapsule,
+  IconButton,
   MetricDisplay,
   SegmentedBar,
-  SegmentedTabs,
   StatusCapsule,
   SwapText,
+  Tip,
+  UnderlineTabs,
 } from "./Primitives";
 import { InspectorEmptyState, InspectorLoadingState } from "./VisualStates";
 
@@ -28,14 +31,36 @@ interface PhaseSpec {
 
 const PHASES: PhaseSpec[] = [
   { key: "dns_ms", label: "DNS Lookup", short: "DNS", colorClass: "bg-sky", dotClass: "bg-sky" },
-  { key: "tcp_ms", label: "TCP Handshake", short: "TCP", colorClass: "bg-cobalt", dotClass: "bg-cobalt" },
+  { key: "tcp_ms", label: "TCP Handshake", short: "TCP", colorClass: "bg-accent", dotClass: "bg-accent" },
   { key: "tls_ms", label: "TLS Handshake", short: "TLS", colorClass: "bg-violet", dotClass: "bg-violet" },
   { key: "ttfb_ms", label: "Server Wait · TTFB", short: "TTFB", colorClass: "bg-emerald", dotClass: "bg-emerald" },
   { key: "download_ms", label: "Content Download", short: "DL", colorClass: "bg-amber", dotClass: "bg-amber" },
 ];
 
 export function ResponseInspector() {
-  const { run, snapshot, running, runStartedAt, inspectorTab, cancelRequest, set, notify } = useStore();
+  const {
+    run,
+    snapshot,
+    running,
+    runStartedAt,
+    inspectorTab,
+    responseWrap,
+    cancelRequest,
+    set,
+    notify,
+  } = useStore(
+    useShallow((s) => ({
+      run: s.run,
+      snapshot: s.snapshot,
+      running: s.running,
+      runStartedAt: s.runStartedAt,
+      inspectorTab: s.inspectorTab,
+      responseWrap: s.responseWrap,
+      cancelRequest: s.cancelRequest,
+      set: s.set,
+      notify: s.notify,
+    })),
+  );
   const [copied, setCopied] = useState(false);
 
   const view: RunView | null = useMemo(() => {
@@ -76,6 +101,8 @@ export function ResponseInspector() {
     }));
   }, [view]);
 
+  const hasTimings = timingSegments.some((s) => s.value > 0);
+
   const copyBody = async () => {
     if (!view?.body) return;
     try {
@@ -90,95 +117,105 @@ export function ResponseInspector() {
 
   if (running) {
     return (
-      <section className="island flex min-h-0 flex-1 flex-col overflow-hidden">
+      <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-canvas">
         <InspectorLoadingState startedAt={runStartedAt} onCancel={() => void cancelRequest()} />
       </section>
     );
   }
 
   return (
-    <section className="island flex min-h-0 flex-1 flex-col overflow-hidden">
-      {/* Telemetry Hero Strip */}
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-canvas">
+      {/* Compact Hoppscotch-style Response Metadata Strip */}
       {view ? (
-        <div key={view.log_id} className="anim-fade-up shrink-0 space-y-2.5 border-b border-line bg-subtle/40 px-4 py-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-2">
-              <StatusCapsule status={view.status} text={view.status_text} hasError={Boolean(view.error)} />
-              <ActorTag actor={view.actor} compact />
-              <EnvCapsule env={view.env} size="xs" />
-              {snapshot && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-violet">
-                  <Sparkles className="h-3 w-3" />
-                  <span>{relativeTime(snapshot.ts)}</span>
-                </span>
+        <div className="shrink-0">
+          <div className="flex min-h-[38px] flex-wrap items-center justify-between gap-x-4 gap-y-1.5 border-b border-line bg-chrome/60 px-3 py-1.5">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11.5px]">
+              <div className="flex items-center gap-1.5">
+                <span className="text-ink3">Status:</span>
+                <StatusCapsule status={view.status} text={view.status_text} hasError={Boolean(view.error)} />
+              </div>
+
+              {dur && (
+                <div className="flex items-center gap-1">
+                  <span className="text-ink3">Time:</span>
+                  <span className="mono font-semibold text-ink">
+                    {dur.num} <span className="font-normal text-ink3">{dur.unit}</span>
+                  </span>
+                </div>
               )}
+
+              {size && (
+                <div className="flex items-center gap-1">
+                  <span className="text-ink3">Size:</span>
+                  <span className="mono font-semibold text-ink">
+                    {size.num} <span className="font-normal text-ink3">{size.unit}</span>
+                  </span>
+                </div>
+              )}
+
               {view.truncated && (
-                <span className="mono rounded-full bg-amber-soft px-2 py-[2px] text-[10px] font-semibold text-amber">
+                <span className="mono rounded border border-amber/30 bg-amber-soft px-1.5 py-[1px] text-[10px] font-semibold text-amber">
                   8 MB cap
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-5">
-              {dur && (
-                <div className="text-right">
-                  <div className="eyebrow text-[9.5px]">Latency</div>
-                  <MetricDisplay num={dur.num} unit={dur.unit} size="md" />
-                </div>
-              )}
-              {size && (
-                <div className="text-right">
-                  <div className="eyebrow text-[9.5px]">Payload</div>
-                  <MetricDisplay num={size.num} unit={size.unit} size="md" />
-                </div>
+            <div className="flex items-center gap-1.5">
+              <EnvCapsule env={view.env} size="xs" />
+              <ActorTag actor={view.actor} size="xs" />
+              {snapshot && (
+                <span className="inline-flex items-center gap-1 text-[10.5px] font-medium text-violet">
+                  <Sparkles className="h-3 w-3" />
+                  <span>{relativeTime(snapshot.ts)}</span>
+                </span>
               )}
             </div>
           </div>
 
-          {/* Gauge Segmented Timing Bar */}
-          <button
-            type="button"
-            onClick={() => set({ inspectorTab: "timing" })}
-            title="View full network phase timing breakdown"
-            className="group block w-full text-left"
-          >
-            <SegmentedBar ticks={30} segments={timingSegments} heightClass="h-[10px]" />
-            <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-[10.5px] text-ink3">
-              <div className="flex flex-wrap items-center gap-3">
+          {/* Slim clickable timing breakdown bar */}
+          {hasTimings && (
+            <button
+              type="button"
+              onClick={() => set({ inspectorTab: "timing" })}
+              title="Open detailed network phase timing breakdown"
+              className="motion group flex w-full items-center gap-3 border-b border-line bg-canvas px-3 py-1.5 text-left hover:bg-subtle/50"
+            >
+              <SegmentedBar segments={timingSegments} heightClass="h-[5px]" className="max-w-[180px] flex-1" />
+              <div className="hidden min-w-0 flex-1 items-center gap-2.5 overflow-hidden text-[10.5px] text-ink3 sm:flex">
                 {PHASES.map((p) => {
                   const val = view.timings?.[p.key] ?? 0;
                   if (val <= 0) return null;
                   return (
-                    <span key={p.key} className="inline-flex items-center gap-1">
+                    <span key={p.key} className="inline-flex shrink-0 items-center gap-1">
                       <span className={cx("h-1.5 w-1.5 rounded-full", p.dotClass)} />
-                      <span className="font-medium text-ink2">{p.short}</span>
+                      <span className="text-ink2">{p.short}</span>
                       <span className="mono">{val.toFixed(1)}ms</span>
                     </span>
                   );
                 })}
               </div>
-              <span className="font-medium text-ink3 group-hover:text-cobalt">Timing details →</span>
-            </div>
-          </button>
+              <span className="ml-auto shrink-0 text-[10.5px] font-medium text-ink3 group-hover:text-accent-text">
+                Timing →
+              </span>
+            </button>
+          )}
 
           {view.error && (
-            <div className="rounded-[8px] border border-rose/25 bg-rose-soft px-2.5 py-1.5 mono text-[11.5px] text-rose">
+            <div className="break-words border-b border-rose/25 bg-rose-soft px-3 py-2 mono text-[11.5px] text-rose select-text">
               {view.error}
             </div>
           )}
         </div>
       ) : (
-        <div className="flex h-[44px] shrink-0 items-center justify-between border-b border-line bg-subtle/40 px-4">
-          <span className="eyebrow">Response Inspector</span>
-          <span className="mono text-[11px] text-ink3">
-            {running ? "Executing request…" : "Ready"}
-          </span>
+        <div className="flex h-[38px] shrink-0 items-center justify-between border-b border-line bg-chrome/60 px-3">
+          <span className="text-[12px] font-semibold text-ink2">Response</span>
+          <span className="mono text-[11px] text-ink3">Ready</span>
         </div>
       )}
 
-      {/* Inspector Tabs & Utility Strip */}
-      <div className="flex h-[40px] shrink-0 items-center justify-between gap-2 border-b border-line bg-subtle/45 px-3.5">
-        <SegmentedTabs
+      {/* Flat Underline Tabs & Utility Actions */}
+      <div className="flex h-[36px] shrink-0 items-center justify-between gap-2 border-b border-line bg-canvas px-3">
+        <UnderlineTabs
           value={inspectorTab}
           onChange={(tab) => set({ inspectorTab: tab })}
           items={[
@@ -193,11 +230,25 @@ export function ResponseInspector() {
           ]}
         />
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {ctype && (
-            <span className="hidden max-w-[180px] truncate rounded-[6px] bg-muted px-2 py-[2px] mono text-[10.5px] text-ink2 sm:inline">
+            <span
+              title={ctype}
+              className="hidden max-w-[170px] truncate rounded border border-line bg-subtle px-1.5 py-[1px] mono text-[10.5px] text-ink2 sm:inline"
+            >
               {ctype.split(";")[0]}
             </span>
+          )}
+          {view?.body && (inspectorTab === "pretty" || inspectorTab === "raw") && (
+            <Tip label={responseWrap ? "Disable line wrap" : "Enable line wrap"}>
+              <IconButton
+                size="xs"
+                active={responseWrap}
+                onClick={() => set({ responseWrap: !responseWrap })}
+              >
+                <WrapText className="h-3.5 w-3.5" strokeWidth={1.85} />
+              </IconButton>
+            </Tip>
           )}
           {view?.body && (
             <Button size="xs" variant="secondary" onClick={() => void copyBody()}>
@@ -208,47 +259,59 @@ export function ResponseInspector() {
         </div>
       </div>
 
-      {/* Response Content */}
-      <div key={view ? `${view.log_id}:${inspectorTab}` : "empty"} className="anim-fade-up min-h-0 flex-1">
+      {/* Response Content (anchored — no vertical jump on tab switch) */}
+      <div className="min-h-0 flex-1 overflow-hidden">
         {!view ? (
           <InspectorEmptyState />
         ) : inspectorTab === "headers" ? (
           <HeadersView view={view} />
         ) : inspectorTab === "raw" ? (
-          <RawView view={view} />
+          <RawView view={view} wrap={responseWrap} />
         ) : inspectorTab === "timing" ? (
           <TimingView timings={view.timings} totalMS={view.duration_ms} />
         ) : (
-          <PrettyView view={view} />
+          <PrettyView view={view} wrap={responseWrap} />
         )}
       </div>
     </section>
   );
 }
 
-function PrettyView({ view }: { view: RunView }) {
+const MAX_PRETTY_BYTES = 1_500_000;
+
+function PrettyView({ view, wrap }: { view: RunView; wrap: boolean }) {
   const ctype = contentType(view.response_headers);
-  const { text, json } = prettyBody(view.body);
-  const isJSON = ctype.includes("json") || json;
+  const { text, json } = useMemo(() => {
+    if (!view.body || view.body.length > MAX_PRETTY_BYTES) {
+      return { text: view.body, json: false };
+    }
+    return prettyBody(view.body);
+  }, [view.body]);
+  const isJSON = (ctype.includes("json") || json) && view.body.length <= MAX_PRETTY_BYTES;
 
   if (!view.body) {
     return (
-      <div className="flex h-full items-center justify-center p-6 text-[12.5px] text-ink3">
+      <div className="flex h-full items-center justify-center p-6 text-[12px] text-ink3">
         Empty response body.
       </div>
     );
   }
   if (isJSON) {
-    return <CodeBlockEditor value={text} readOnly language />;
+    return <CodeBlockEditor value={text} readOnly language lineWrap={wrap} />;
   }
   return (
-    <pre className="scroll h-full overflow-auto whitespace-pre-wrap break-words px-4 py-3 mono text-[12.5px] leading-[1.65] text-ink">
+    <pre
+      className={cx(
+        "scroll h-full overflow-auto px-3.5 py-2.5 mono text-[12px] leading-[1.6] text-ink",
+        wrap ? "whitespace-pre-wrap break-words" : "whitespace-pre",
+      )}
+    >
       {view.body}
     </pre>
   );
 }
 
-function RawView({ view }: { view: RunView }) {
+function RawView({ view, wrap }: { view: RunView; wrap: boolean }) {
   const raw = useMemo(() => {
     const lines: string[] = [];
     lines.push(`> ${view.method} ${view.url}`);
@@ -266,7 +329,12 @@ function RawView({ view }: { view: RunView }) {
   }, [view]);
 
   return (
-    <pre className="scroll h-full overflow-auto whitespace-pre-wrap break-words px-4 py-3 mono text-[12px] leading-[1.65] text-ink2">
+    <pre
+      className={cx(
+        "scroll h-full overflow-auto px-3.5 py-2.5 mono text-[12px] leading-[1.6] text-ink2",
+        wrap ? "whitespace-pre-wrap break-words" : "whitespace-pre",
+      )}
+    >
       {raw}
     </pre>
   );
@@ -278,14 +346,14 @@ function HeadersView({ view }: { view: RunView }) {
 
   if (resRows.length === 0 && reqRows.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center p-6 text-[12.5px] text-ink3">
+      <div className="flex h-full items-center justify-center p-6 text-[12px] text-ink3">
         No headers recorded.
       </div>
     );
   }
 
   return (
-    <div className="scroll h-full overflow-y-auto p-4 space-y-5">
+    <div className="scroll h-full overflow-y-auto">
       <HeaderGroup title="Response Headers" rows={resRows} />
       <HeaderGroup title="Request Headers (Redacted)" rows={reqRows} />
     </div>
@@ -293,21 +361,52 @@ function HeadersView({ view }: { view: RunView }) {
 }
 
 function HeaderGroup({ title, rows }: { title: string; rows: [string, string[]][] }) {
+  const notify = useStore((s) => s.notify);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
   if (rows.length === 0) return null;
+
+  const copyValue = async (key: string, val: string) => {
+    try {
+      await navigator.clipboard.writeText(val);
+      setCopiedKey(key);
+      notify(`Copied ${key}`, "success");
+      window.setTimeout(() => setCopiedKey((cur) => (cur === key ? null : cur)), 1200);
+    } catch (err) {
+      notify(String(err), "error");
+    }
+  };
+
   return (
-    <div className="overflow-hidden rounded-[11px] border border-line bg-surface">
-      <div className="border-b border-line bg-subtle/60 px-3 py-2">
-        <span className="eyebrow">{title}</span>
+    <div className="border-b border-line">
+      <div className="flex h-[30px] items-center justify-between border-b border-line bg-chrome/60 px-3">
+        <span className="text-[11.5px] font-semibold text-ink2">{title}</span>
+        <span className="mono text-[10.5px] text-ink3">{rows.length}</span>
       </div>
-      <div className="divide-y divide-line/70">
-        {rows.map(([key, values]) => (
-          <div key={key} className="grid grid-cols-[36%_1fr] text-[12px]">
-            <span className="px-3 py-2 mono font-medium text-ink2 break-all">{key}</span>
-            <span className="border-l border-line/70 px-3 py-2 mono break-all text-ink">
-              {values.join(", ")}
-            </span>
-          </div>
-        ))}
+      <div className="divide-y divide-line-subtle">
+        {rows.map(([key, values]) => {
+          const joined = values.join(", ");
+          return (
+            <div key={key} className="group grid grid-cols-[36%_1fr_30px] items-start text-[12px] hover:bg-subtle/35">
+              <span className="select-text px-3 py-1.5 mono font-medium text-ink2 break-all">{key}</span>
+              <span className="select-text border-l border-line-subtle px-3 py-1.5 mono break-all text-ink">
+                {joined}
+              </span>
+              <button
+                type="button"
+                title={`Copy ${key} value`}
+                onClick={() => void copyValue(key, joined)}
+                className="motion flex h-full min-h-[28px] items-center justify-center text-ink3 opacity-0 hover:text-ink group-hover:opacity-100 focus-visible:opacity-100"
+              >
+                {copiedKey === key ? (
+                  <Check className="h-3 w-3 text-emerald" />
+                ) : (
+                  <Copy className="h-3 w-3" />
+                )}
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -320,8 +419,8 @@ function TimingView({ timings, totalMS }: { timings: Timings; totalMS: number })
   const totalSplit = splitDuration(totalMS);
 
   return (
-    <div className="scroll h-full overflow-y-auto p-4 space-y-4">
-      <div className="flex items-center justify-between rounded-[12px] border border-line bg-subtle/60 px-4 py-3">
+    <div className="scroll h-full overflow-y-auto p-3.5 space-y-3.5">
+      <div className="flex items-center justify-between rounded-lg border border-line bg-chrome/60 px-3.5 py-2.5">
         <div>
           <div className="eyebrow">Total Round-Trip</div>
           <p className="mt-0.5 text-[11.5px] text-ink3">Measured via Go httptrace</p>
@@ -329,25 +428,25 @@ function TimingView({ timings, totalMS }: { timings: Timings; totalMS: number })
         <MetricDisplay num={totalSplit.num} unit={totalSplit.unit} size="lg" />
       </div>
 
-      <div className="divide-y divide-line rounded-[12px] border border-line bg-surface px-4">
+      <div className="divide-y divide-line-subtle rounded-lg border border-line bg-canvas px-3.5">
         {values.map((phase) => {
           const share = Math.round((phase.ms / sum) * 100);
           return (
-            <div key={phase.key} className="py-3.5">
-              <div className="mb-2 flex items-center justify-between gap-3">
+            <div key={phase.key} className="py-3">
+              <div className="mb-1.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <span className={cx("h-2 w-2 rounded-full", phase.dotClass)} />
-                  <span className="text-[12.5px] font-semibold text-ink">{phase.label}</span>
-                  <span className="mono text-[11px] text-ink3">{share}%</span>
+                  <span className="text-[12px] font-medium text-ink">{phase.label}</span>
+                  <span className="mono text-[10.5px] text-ink3">{share}%</span>
                 </div>
                 <MetricDisplay num={phase.ms.toFixed(1)} unit="ms" size="sm" />
               </div>
-              <SegmentedBar
-                ticks={28}
-                ratio={phase.ms / maxPhase}
-                fillClass={phase.colorClass}
-                heightClass="h-[11px]"
-              />
+              <div className="h-[6px] w-full overflow-hidden rounded-[2px] bg-tick-track">
+                <div
+                  className={cx("h-full rounded-[2px]", phase.colorClass)}
+                  style={{ width: `${Math.max((phase.ms / maxPhase) * 100, phase.ms > 0 ? 2 : 0)}%` }}
+                />
+              </div>
             </div>
           );
         })}

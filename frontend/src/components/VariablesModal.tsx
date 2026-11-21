@@ -1,14 +1,26 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { ChevronDown, KeyRound, Lock, ShieldCheck, X } from "lucide-react";
+import { Check, ChevronDown, KeyRound, Lock, ShieldCheck, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import type { VarItem } from "../lib/types";
 import { useStore } from "../store";
 import { Button, cx, EnvCapsule, IconButton, SwapText } from "./Primitives";
 import { Spinner } from "./VisualStates";
 
 export function VariablesModal() {
-  const { varsOpen, varFocus, vars, env, environments, savingVar, set, saveVar } = useStore();
+  const { varsOpen, varFocus, vars, env, environments, savingVar, set, saveVar } = useStore(
+    useShallow((s) => ({
+      varsOpen: s.varsOpen,
+      varFocus: s.varFocus,
+      vars: s.vars,
+      env: s.env,
+      environments: s.environments,
+      savingVar: s.savingVar,
+      set: s.set,
+      saveVar: s.saveVar,
+    })),
+  );
   const [scope, setScope] = useState(env || "global");
   const [key, setKey] = useState("");
   const [value, setValue] = useState("");
@@ -21,7 +33,7 @@ export function VariablesModal() {
     setKey(varFocus ?? "");
     setScope(found?.scope ?? env ?? "global");
     setSecret(found?.secret ?? false);
-    setValue("");
+    setValue(found && !found.secret ? found.value : "");
     setFilterScope("all");
   }, [varsOpen, varFocus, vars, env]);
 
@@ -48,36 +60,34 @@ export function VariablesModal() {
       onOpenChange={(open) => set({ varsOpen: open, varFocus: open ? useStore.getState().varFocus : null })}
     >
       <Dialog.Portal>
-        <Dialog.Overlay className="dialog-overlay fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" />
-        <Dialog.Content className="floating-surface dialog-content fixed left-1/2 top-[12%] z-50 w-[92vw] max-w-[620px] -translate-x-1/2 overflow-hidden rounded-[14px]">
+        <Dialog.Overlay className="dialog-overlay fixed inset-0 z-40 bg-black/35" />
+        <Dialog.Content className="modal-surface dialog-content fixed left-1/2 top-1/2 z-50 flex max-h-[85vh] w-[92vw] max-w-[620px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[10px]">
           {/* Header */}
-          <div className="flex h-[48px] items-center justify-between border-b border-line px-4">
+          <div className="flex h-[46px] items-center justify-between border-b border-line px-4">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-violet-soft text-violet">
-                <KeyRound className="h-4 w-4" />
-              </div>
-              <Dialog.Title className="text-[14px] font-bold tracking-tight text-ink">
+              <KeyRound className="h-4 w-4 text-violet" strokeWidth={1.9} />
+              <Dialog.Title className="text-[13.5px] font-semibold tracking-tight text-ink">
                 Variables & Keychain Vault
               </Dialog.Title>
-              <EnvCapsule env={env} />
+              <EnvCapsule env={env} size="xs" />
             </div>
-            <IconButton onClick={() => set({ varsOpen: false })}>
+            <IconButton size="xs" onClick={() => set({ varsOpen: false })}>
               <X className="h-4 w-4" />
             </IconButton>
           </div>
 
-          {/* Scope filter pills */}
-          <div className="flex items-center gap-1.5 border-b border-line bg-subtle/50 px-4 py-2">
+          {/* Scope filter tabs */}
+          <div className="flex items-center gap-1 border-b border-line bg-chrome px-4 py-1.5">
             {scopes.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => setFilterScope(s)}
                 className={cx(
-                  "motion rounded-full px-2.5 py-1 text-[11px] font-medium",
+                  "motion rounded px-2 py-0.5 text-[11.5px]",
                   filterScope === s
-                    ? "bg-surface text-ink shadow-2xs border border-line"
-                    : "text-ink2 hover:text-ink",
+                    ? "bg-subtle font-semibold text-ink ring-1 ring-line-strong"
+                    : "font-medium text-ink3 hover:bg-subtle/60 hover:text-ink",
                 )}
               >
                 {s === "all" ? `All (${vars.length})` : s}
@@ -86,8 +96,8 @@ export function VariablesModal() {
           </div>
 
           {/* Variable list */}
-          <div className="scroll max-h-[250px] overflow-y-auto">
-            <div className="grid h-[28px] grid-cols-[1.2fr_1.3fr_92px_82px] items-center border-b border-line bg-subtle/40 px-4">
+          <div className="scroll max-h-[250px] overflow-y-auto bg-canvas">
+            <div className="grid h-[28px] grid-cols-[1.2fr_1.3fr_92px_84px] items-center border-b border-line bg-subtle/40 px-4">
               <span className="eyebrow">Key</span>
               <span className="eyebrow">Value</span>
               <span className="eyebrow">Scope</span>
@@ -95,9 +105,7 @@ export function VariablesModal() {
             </div>
             {filteredVars.length === 0 ? (
               <div className="flex flex-col items-center justify-center px-4 py-7 text-center">
-                <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[11px] border border-line bg-subtle text-ink3">
-                  <Lock className="h-4.5 w-4.5" strokeWidth={1.8} />
-                </div>
+                <Lock className="mb-2 h-4 w-4 text-ink3" strokeWidth={1.8} />
                 <div className="text-[12px] font-medium text-ink2">No variables in this scope yet</div>
                 <div className="mt-0.5 text-[11px] text-ink3">Add a plain variable or keychain secret below.</div>
               </div>
@@ -110,16 +118,21 @@ export function VariablesModal() {
                     setKey(item.key);
                     setScope(item.scope);
                     setSecret(item.secret);
-                    setValue("");
+                    setValue(item.secret ? "" : item.value);
                     set({ varFocus: item.key });
                   }}
                   className={cx(
-                    "motion grid h-[36px] w-full grid-cols-[1.2fr_1.3fr_92px_82px] items-center border-b border-line/70 px-4 text-left text-[12px] hover:bg-subtle",
-                    varFocus === item.key ? "bg-cobalt-soft/60 text-ink" : "text-ink2",
+                    "motion grid h-[34px] w-full grid-cols-[1.2fr_1.3fr_92px_84px] items-center border-b border-line-subtle px-4 text-left text-[12px] hover:bg-subtle/60",
+                    varFocus === item.key ? "bg-accent-soft text-ink" : "text-ink2",
                   )}
                 >
-                  <span className="truncate pr-2 mono font-medium text-ink">{item.key}</span>
-                  <span className="truncate pr-2 mono text-[11.5px]">
+                  <span title={item.key} className="truncate pr-2 mono font-medium text-ink">
+                    {item.key}
+                  </span>
+                  <span
+                    title={item.secret ? "Stored in OS keychain" : item.value || undefined}
+                    className="truncate pr-2 mono text-[11.5px]"
+                  >
                     {item.secret ? (
                       <span className="inline-flex items-center gap-1 text-violet">
                         <Lock className="h-3 w-3" />
@@ -133,8 +146,10 @@ export function VariablesModal() {
                   <span>
                     <span
                       className={cx(
-                        "rounded-full px-2 py-[1px] text-[10px] font-semibold",
-                        item.secret ? "bg-violet-soft text-violet" : "bg-muted text-ink2",
+                        "rounded border px-1.5 py-[1px] text-[10px] font-semibold",
+                        item.secret
+                          ? "border-violet/25 bg-violet-soft text-violet"
+                          : "border-line bg-subtle text-ink2",
                       )}
                     >
                       {item.secret ? "Keychain" : "Plain"}
@@ -146,14 +161,14 @@ export function VariablesModal() {
           </div>
 
           {/* Add / Edit Form */}
-          <form onSubmit={commit} className="space-y-3 border-t border-line bg-subtle/50 p-4">
+          <form onSubmit={commit} className="space-y-3 border-t border-line bg-chrome p-4">
             <div className="flex flex-wrap items-center gap-2">
               <input
                 value={key}
                 onChange={(e) => setKey(e.target.value)}
                 placeholder="base_url"
                 spellCheck={false}
-                className="h-[32px] w-[170px] rounded-[8px] border border-line bg-surface px-2.5 mono text-[12px] text-ink placeholder:text-ink3 focus:border-cobalt/50"
+                className="h-[32px] w-[170px] rounded-md border border-line-strong bg-canvas px-2.5 mono text-[12px] text-ink placeholder:text-ink3 focus:border-accent"
               />
               <span className="mono text-ink3">=</span>
               <input
@@ -162,7 +177,7 @@ export function VariablesModal() {
                 placeholder={secret ? "Enter secret (stored only in OS keychain)" : "Variable value"}
                 type={secret ? "password" : "text"}
                 spellCheck={false}
-                className="h-[32px] min-w-[180px] flex-1 rounded-[8px] border border-line bg-surface px-2.5 mono text-[12px] text-ink placeholder:text-ink3 focus:border-cobalt/50"
+                className="h-[32px] min-w-[180px] flex-1 rounded-md border border-line-strong bg-canvas px-2.5 mono text-[12px] text-ink placeholder:text-ink3 focus:border-accent"
               />
             </div>
 
@@ -171,7 +186,7 @@ export function VariablesModal() {
                 <DropdownMenu.Trigger asChild>
                   <button
                     type="button"
-                    className="motion inline-flex h-[28px] items-center gap-2 rounded-[8px] border border-line bg-surface px-2.5 text-[12px] font-medium text-ink shadow-2xs hover:border-line-strong hover:bg-subtle"
+                    className="motion inline-flex h-[28px] items-center gap-2 rounded-md border border-line bg-canvas px-2.5 text-[12px] font-medium text-ink hover:border-line-strong hover:bg-subtle"
                   >
                     <span className="text-ink3">Scope:</span>
                     <span className="mono">{scope}</span>
@@ -179,18 +194,18 @@ export function VariablesModal() {
                   </button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
-                  <DropdownMenu.Content align="start" sideOffset={6} className="floating-surface floating-pop z-50 min-w-[160px] rounded-[11px] p-1">
+                  <DropdownMenu.Content align="start" sideOffset={6} className="popover-surface floating-pop z-50 min-w-[160px] rounded-lg p-1">
                     {["global", ...environments.filter((e) => e !== "global")].map((name) => (
                       <DropdownMenu.Item
                         key={name}
                         onSelect={() => setScope(name)}
                         className={cx(
-                          "motion flex cursor-default items-center justify-between rounded-[7px] px-2.5 py-1.5 mono text-[12px] outline-none data-[highlighted]:bg-muted",
+                          "motion flex cursor-default items-center justify-between rounded-md px-2 py-1.5 mono text-[12px] outline-none data-[highlighted]:bg-subtle",
                           scope === name ? "font-semibold text-ink" : "text-ink2",
                         )}
                       >
                         <span>{name}</span>
-                        {scope === name && <span className="h-1.5 w-1.5 rounded-full bg-cobalt" />}
+                        {scope === name && <Check className="h-3.5 w-3.5 text-accent-text" strokeWidth={2.2} />}
                       </DropdownMenu.Item>
                     ))}
                   </DropdownMenu.Content>
@@ -201,10 +216,10 @@ export function VariablesModal() {
                 type="button"
                 onClick={() => setSecret((v) => !v)}
                 className={cx(
-                  "motion inline-flex h-[28px] items-center gap-1.5 rounded-[8px] border px-2.5 text-[12px] font-medium shadow-2xs",
+                  "motion inline-flex h-[28px] items-center gap-1.5 rounded-md border px-2.5 text-[12px] font-medium",
                   secret
                     ? "border-violet/40 bg-violet-soft text-violet"
-                    : "border-line bg-surface text-ink2 hover:border-line-strong hover:text-ink",
+                    : "border-line bg-canvas text-ink2 hover:border-line-strong hover:text-ink",
                 )}
               >
                 <ShieldCheck className="h-3.5 w-3.5" />
@@ -223,8 +238,8 @@ export function VariablesModal() {
             </div>
 
             <p className="text-[11px] leading-relaxed text-ink3">
-              Secret values are stored exclusively in the OS keychain. <span className="mono">envs.yaml</span> commits
-              only the key name and <span className="mono">secret: true</span>.
+              Secret values are stored exclusively in the OS keychain. <span className="mono text-ink2">envs.yaml</span> commits
+              only the key name and <span className="mono text-ink2">secret: true</span>.
             </p>
           </form>
         </Dialog.Content>

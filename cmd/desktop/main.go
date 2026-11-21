@@ -49,11 +49,18 @@ func main() {
 		Height:           800,
 		MinWidth:         960,
 		MinHeight:        640,
-		BackgroundColour: application.NewRGB(0xF2, 0xF4, 0xF8),
+		BackgroundColour: application.NewRGB(0xFA, 0xFA, 0xFA),
 		URL:              "/",
 		Mac: application.MacWindow{
-			TitleBar:                application.MacTitleBarHiddenInset,
-			InvisibleTitleBarHeight: 44,
+			TitleBar: application.MacTitleBar{
+				AppearsTransparent:   true,
+				HideTitle:            true,
+				FullSizeContent:      true,
+				UseToolbar:           true,
+				HideToolbarSeparator: true,
+				ToolbarStyle:         application.MacToolbarStyleUnifiedCompact,
+			},
+			InvisibleTitleBarHeight: 40,
 			Backdrop:                application.MacBackdropNormal,
 		},
 	})

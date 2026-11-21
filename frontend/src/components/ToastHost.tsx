@@ -1,9 +1,12 @@
 import { useEffect } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useStore } from "../store";
 import { Button, cx } from "./Primitives";
 
 export function ToastHost() {
-  const { toast, dismissToast } = useStore();
+  const { toast, dismissToast } = useStore(
+    useShallow((s) => ({ toast: s.toast, dismissToast: s.dismissToast })),
+  );
 
   useEffect(() => {
     if (!toast) return;
@@ -21,13 +24,13 @@ export function ToastHost() {
         ? "bg-amber"
         : toast.tone === "error"
           ? "bg-rose"
-          : "bg-cobalt";
+          : "bg-accent";
 
   return (
     <div
       key={toast.id}
       role="status"
-      className="floating-surface anim-toast fixed bottom-4 right-4 z-50 flex max-w-[460px] items-center gap-2.5 rounded-full py-2 pl-3.5 pr-2.5"
+      className="popover-surface anim-toast fixed bottom-9 right-3 z-50 flex max-w-[460px] items-center gap-2.5 rounded-lg py-2 pl-3 pr-2.5"
     >
       <span className={cx("h-2 w-2 shrink-0 rounded-full", dotColor)} />
       <span className="text-[12px] font-medium text-ink">{toast.text}</span>

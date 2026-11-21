@@ -1,6 +1,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { CornerDownLeft, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import type { ListItem } from "../lib/types";
 import { useStore } from "../store";
 import { cx, Kbd, MethodBadge } from "./Primitives";
@@ -35,7 +36,7 @@ function scoreMatch(text: string, query: string): number {
 export function CommandPalette() {
   const {
     paletteOpen,
-    editor,
+    hasEditor,
     apis,
     environments,
     env,
@@ -54,7 +55,30 @@ export function CommandPalette() {
     reloadWorkspace,
     pruneHistory,
     toggleTheme,
-  } = useStore();
+  } = useStore(
+    useShallow((s) => ({
+      paletteOpen: s.paletteOpen,
+      hasEditor: Boolean(s.editor),
+      apis: s.apis,
+      environments: s.environments,
+      env: s.env,
+      layout: s.layout,
+      theme: s.theme,
+      set: s.set,
+      selectApi: s.selectApi,
+      newDraft: s.newDraft,
+      closeEditor: s.closeEditor,
+      sendRequest: s.sendRequest,
+      saveEditor: s.saveEditor,
+      copyCurl: s.copyCurl,
+      copyGuide: s.copyGuide,
+      openVars: s.openVars,
+      switchEnv: s.switchEnv,
+      reloadWorkspace: s.reloadWorkspace,
+      pruneHistory: s.pruneHistory,
+      toggleTheme: s.toggleTheme,
+    })),
+  );
 
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -117,7 +141,7 @@ export function CommandPalette() {
       },
       {
         id: "theme",
-        label: theme === "dark" ? "Switch to Porcelain Light theme" : "Switch to Velvet Obsidian Dark theme",
+        label: theme === "dark" ? "Switch to light mode" : "Switch to dark mode",
         run: () => {
           toggleTheme();
           set({ paletteOpen: false });
@@ -141,7 +165,7 @@ export function CommandPalette() {
       },
     ];
 
-    if (editor) {
+    if (hasEditor) {
       list.unshift(
         {
           id: "send",
@@ -195,7 +219,7 @@ export function CommandPalette() {
 
     return list;
   }, [
-    editor,
+    hasEditor,
     environments,
     env,
     layout,
@@ -263,14 +287,14 @@ export function CommandPalette() {
   return (
     <Dialog.Root open={paletteOpen} onOpenChange={(open) => set({ paletteOpen: open })}>
       <Dialog.Portal>
-        <Dialog.Overlay className="dialog-overlay fixed inset-0 z-40 bg-black/25 backdrop-blur-[2px]" />
+        <Dialog.Overlay className="dialog-overlay fixed inset-0 z-40 bg-black/35" />
         <Dialog.Content
-          className="floating-surface dialog-content fixed left-1/2 top-[16%] z-50 w-[92vw] max-w-[540px] -translate-x-1/2 overflow-hidden rounded-[14px]"
+          className="modal-surface dialog-content fixed left-1/2 top-[15%] z-50 w-[92vw] max-w-[540px] -translate-x-1/2 overflow-hidden rounded-[10px]"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <Dialog.Title className="sr-only">Command palette</Dialog.Title>
-          <div className="flex h-[46px] items-center gap-2.5 border-b border-line px-3.5">
-            <Search className="h-4 w-4 shrink-0 text-ink3" strokeWidth={1.9} />
+          <div className="flex h-[44px] items-center gap-2.5 border-b border-line px-3.5">
+            <Search className="h-4 w-4 shrink-0 text-ink3" strokeWidth={1.85} />
             <input
               autoFocus
               value={query}
@@ -289,18 +313,19 @@ export function CommandPalette() {
                 <button
                   key={result.id}
                   type="button"
+                  title={result.label}
                   onMouseEnter={() => setActive(index)}
                   onClick={() => result.run()}
                   className={cx(
-                    "motion flex h-[36px] w-full items-center gap-2.5 rounded-[9px] px-2.5 text-left text-[12.5px]",
-                    index === active ? "bg-cobalt-soft text-ink" : "text-ink2 hover:bg-subtle",
+                    "motion flex h-[34px] w-full items-center gap-2.5 rounded-md px-2.5 text-left text-[12.5px]",
+                    index === active ? "bg-subtle text-ink" : "text-ink2 hover:bg-subtle/60",
                   )}
                 >
                   {result.method ? (
-                    <MethodBadge method={result.method} short className="w-[44px] shrink-0 justify-center" />
+                    <MethodBadge method={result.method} short className="w-[38px] shrink-0 text-[10.5px]" />
                   ) : (
-                    <span className="flex w-[44px] shrink-0 items-center justify-center text-ink3">
-                      <CornerDownLeft className={cx("h-3.5 w-3.5", index !== active && "opacity-35")} />
+                    <span className="flex w-[38px] shrink-0 items-center justify-center text-ink3">
+                      <CornerDownLeft className={cx("h-3.5 w-3.5", index !== active && "opacity-40")} />
                     </span>
                   )}
                   <span className={cx("min-w-0 flex-1 truncate", index === active && "font-medium")}>
@@ -314,7 +339,7 @@ export function CommandPalette() {
             )}
           </div>
 
-          <div className="flex h-[32px] items-center gap-4 border-t border-line bg-subtle/60 px-3.5 text-[11px] text-ink3">
+          <div className="flex h-[30px] items-center gap-4 border-t border-line bg-chrome px-3.5 text-[11px] text-ink3">
             <span className="inline-flex items-center gap-1">
               <Kbd>↑</Kbd>
               <Kbd>↓</Kbd> navigate
